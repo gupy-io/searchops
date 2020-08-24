@@ -1,0 +1,40 @@
+{
+  "name": "searchops",
+  "version": "0.0.0",
+  "description": "Some description",
+  "main": "index.js",
+  "scripts": {
+    "test": "not sure yet"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gupy-io/searchops.git"
+  },
+  "keywords": [
+    "elasticsearch"
+  ],
+  "author": "Victor Villas",
+  "license": "LGPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/gupy-io/searchops/issues"
+  },
+  "homepage": "https://github.com/gupy-io/searchops#readme",
+  "dependencies": {
+    "@elastic/elasticsearch": "^7.8.0"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.2.12",
+    "@types/chai-as-promised": "^7.1.3",
+    "@types/faker": "^4.1.12",
+    "@types/node": "^14.0.27",
+    "@types/sinon": "^9.0.4",
+    "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
+    "faker": "^4.1.0",
+    "husky": "^4.2.5",
+    "mocha": "^8.1.1",
+    "sinon": "^9.0.2",
+    "sinon-chai": "^3.5.0",
+    "typescript": "^4.0.0-beta"
+  }
+}
