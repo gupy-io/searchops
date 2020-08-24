@@ -7,9 +7,6 @@ import { expect } from 'chai';
 import faker from 'faker';
 import sinon from 'sinon';
 
-import { logger } from '../logging';
-import { environment } from '../private-api-config/environmentVariables';
-
 import { Config } from './service';
 import { IndexManager } from './migration';
 
@@ -18,11 +15,12 @@ const randomSnakeCase = (): string => faker.random.word().replace(/\W/g, '_').to
 describe('Elasticsearch Index Migration @integration tests', () => {
   const sandbox = sinon.createSandbox();
 
-  const { elasticHost, elasticPort } = environment;
+  const elasticHost = process.env.ELASTIC_HOST ?? 'localhost';
+  const elasticPort = process.env.ELASTIC_PORT ?? '9200';
   const esClient: Client = new Client({ node: `http://${elasticHost}:${elasticPort}` });
-  esClient.on(events.RESPONSE, (error, result): void => {
-    if (error) logger.error(JSON.stringify(result, null, 2));
-    else logger.silly(JSON.stringify(result, null, 2));
+  esClient.on('response', (error, result): void => {
+    // eslint-disable-next-line no-console
+    if (error) console.log(JSON.stringify(result, null, 2));
   });
 
   const esConfig: Config = {
