@@ -20,6 +20,7 @@ export interface Query {
   query_string?: QueryStringQuery;
   term?: TermQuery;
   terms?: TermsQuery;
+  match_phrase_prefix?: TermQuery;
 }
 
 export interface BoolQuery {
@@ -137,6 +138,7 @@ export interface KeywordMapping {
   type: 'keyword';
   ignore_above?: number;
   null_value?: string;
+  fields?: Properties;
 }
 
 export interface NestedMapping {

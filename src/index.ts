@@ -47,12 +47,12 @@ export class SearchEngine<E, D extends Document> implements Provider<D> {
     return new QueryBuilder({ docsProvider: this });
   }
 
-  public getIndexManager(): IndexManager {
-    return new IndexManager({ esClient: this.esClient, esConfig: this.esConfig });
+  public getIndexManager(triggerUpdate = false): IndexManager {
+    return new IndexManager({ esClient: this.esClient, esConfig: this.esConfig, triggerUpdate });
   }
 
-  public bulk(body: any, refresh: 'wait_for' | 'false'): Promise<void> {
-    return this.searchService.bulk(body, refresh);
+  public async bulk(body: any, refresh: 'wait_for' | 'false'): Promise<void> {
+    await this.searchService.bulk(body, refresh);
   }
 
   public index(entity: E): Promise<void> {

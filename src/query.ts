@@ -47,6 +47,18 @@ export class QueryBuilder<D extends Document> {
     return this;
   }
 
+  public withFiltersMatchPhrasePrefix(
+    fields: { field: string; term: string }[],
+  ): QueryBuilder<D> {
+    const filters = fields.map((item) => {
+      const filter: Query =
+          { match_phrase_prefix: { [item.field]: item.term } };
+      return filter;
+    });
+    this.searchParams.filter.push({ bool: { should: filters } });
+    return this;
+  }
+
   public withNestedFilter(source: string, field: string, terms: string[]): QueryBuilder<D> {
     this.searchParams.filter.push({ nested: {
       path: source,

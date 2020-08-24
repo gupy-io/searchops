@@ -50,6 +50,15 @@ export class ValidationError extends Error {
   }
 }
 
+export class BulkError extends Error {
+  public errors: object[];
+
+  public constructor(message: string, errors: object[]) {
+    super(message);
+    this.errors = errors;
+  }
+}
+
 export interface Provider<D extends Document> {
   search(params: Params): Promise<Result<D>>;
 }
@@ -68,6 +77,22 @@ export class SearchService<D extends Document> implements Provider<D> {
     this.validate = getValidatorForMapping(esConfig.mappings);
   }
 
+  private getAction(item): any {
+    if (item.create) {
+      return item.create;
+    }
+    if (item.delete) {
+      return item.delete;
+    }
+    if (item.index) {
+      return item.index;
+    }
+    if (item.update) {
+      return item.update;
+    }
+    return {};
+  }
+
   public async bulk(body: any, refresh: 'wait_for' | 'false' = 'false'): Promise<void> {
     const response = await this.esClient.bulk({
       index: this.esConfig.alias,
@@ -75,11 +100,12 @@ export class SearchService<D extends Document> implements Provider<D> {
       refresh,
     });
     if (response.body.errors) {
-      const errors = response.body.items.filter(item => item.update && item.update.error);
-      if (errors.some(item => item.update.error.type === 'version_conflict_engine_exception')) {
-        throw new Error('version_conflict_engine_exception');
-      }
-      logger.error('Error on bulk request', errors);
+      const errors = response.body.items
+        .filter(item => !!this.getAction(item).error)
+        .map(item => this.getAction(item).error);
+      // This logger is temporary and will be removed soon
+      logger.error('Error on bulk request (complete log)', response.body);
+      throw new BulkError('Error on bulk request', errors);
     }
   }
 
@@ -123,16 +149,47 @@ export class SearchService<D extends Document> implements Provider<D> {
     }
   }
 
+  private checkIfIsBooleanQuery(query: string): boolean {
+    return query.includes(':');
+  }
+
+  private getshould(string: string, nested: string[]): Query | Query[] {
+    if (!string) return { match_all: {} };
+
+    const isBooleanQuery = this.checkIfIsBooleanQuery(string);
+    if (isBooleanQuery) {
+      return {
+        bool: {
+          should: [{ query_string: { query: string } }, ...nested.map(
+            path => ({ nested: { path, query: { query_string: { query: string } } } }),
+          )],
+        },
+      };
+    }
+
+    return [
+      {
+        match_phrase_prefix: { name: string },
+      },
+      {
+        match_phrase_prefix: { 'code.text': string },
+      },
+      {
+        nested: {
+          path: 'positions',
+          query: { match_phrase_prefix: { 'positions.code.text': string } },
+        },
+      },
+    ];
+  }
+
   public async search(params: Params): Promise<Result<D>> {
     const { string, nested, filter, grants, facets, rerank, window } = params;
     try {
       const searchBody: SearchBody = {
         query: { bool: {
-          must: string
-            ? { bool: { should: [{ query_string: { query: string } }, ...nested.map(
-              path => ({ nested: { path, query: { query_string: { query: string } } } }),
-            )] } }
-            : { match_all: {} },
+          should: this.getshould(string, nested),
+          minimum_should_match: 1,
           filter: { bool: {
             must: filter,
             should: grants,
