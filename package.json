@@ -4,7 +4,7 @@
   "description": "Some description",
   "main": "index.js",
   "scripts": {
-    "test": "not sure yet"
+    "test": "mocha -r ts-node/register \"**/*.test.ts\""
   },
   "repository": {
     "type": "git",
@@ -29,6 +29,7 @@
     "@types/mocha": "^8.0.3",
     "@types/node": "^14.0.27",
     "@types/sinon": "^9.0.4",
+    "@types/sinon-chai": "^3.2.4",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "faker": "^4.1.0",
@@ -36,6 +37,7 @@
     "mocha": "^8.1.1",
     "sinon": "^9.0.2",
     "sinon-chai": "^3.5.0",
+    "ts-node": "^9.0.0",
     "typescript": "^4.0.2"
   }
 }
