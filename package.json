@@ -20,7 +20,8 @@
   },
   "homepage": "https://github.com/gupy-io/searchops#readme",
   "dependencies": {
-    "@elastic/elasticsearch": "^7.8.0"
+    "@elastic/elasticsearch": "^7.8.0",
+    "ajv": "^6.12.4"
   },
   "devDependencies": {
     "@types/chai": "^4.2.12",
