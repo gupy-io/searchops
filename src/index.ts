@@ -51,7 +51,7 @@ export class SearchEngine<E, D extends Document> implements Provider<D> {
     return new IndexManager({ esClient: this.esClient, esConfig: this.esConfig, triggerUpdate });
   }
 
-  public async bulk(body: any, refresh: 'wait_for' | 'false'): Promise<void> {
+  public async bulk(body: any, refresh: 'wait_for' | false): Promise<void> {
     await this.searchService.bulk(body, refresh);
   }
 

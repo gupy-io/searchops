@@ -2,7 +2,7 @@
 // Elasticsearch types follow the snake_case JSON convention
 // Document is in _source, plus other metadata fields with _
 
-import { Client, events } from '@elastic/elasticsearch';
+import { Client } from '@elastic/elasticsearch';
 import { expect } from 'chai';
 import faker from 'faker';
 import sinon from 'sinon';

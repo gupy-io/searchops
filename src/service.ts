@@ -93,7 +93,7 @@ export class SearchService<D extends Document> implements Provider<D> {
     return {};
   }
 
-  public async bulk(body: any, refresh: 'wait_for' | 'false' = 'false'): Promise<void> {
+  public async bulk(body: any, refresh: 'wait_for' | false = false): Promise<void> {
     const response = await this.esClient.bulk({
       index: this.esConfig.alias,
       body,
