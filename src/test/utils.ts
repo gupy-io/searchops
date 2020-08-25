@@ -1,4 +1,4 @@
-import { Client, events } from '@elastic/elasticsearch';
+import { Client } from '@elastic/elasticsearch';
 import { random } from 'faker';
 
 import { logger } from '../../logging';
@@ -13,7 +13,7 @@ export function getRandomSnakeCase(): string {
 export function getTestClient(): Client {
   const { elasticHost, elasticPort } = config;
   const esClient: Client = new Client({ node: `http://${elasticHost}:${elasticPort}` });
-  esClient.on(events.RESPONSE, (error, result): void => {
+  esClient.on('response', (error, result): void => {
     if (error) logger.error(JSON.stringify(result, null, 2));
     else logger.silly(JSON.stringify(result, null, 2));
   });

@@ -18,12 +18,12 @@ describe('SearchService', () => {
       });
       const document = 'document';
       await searchService.bulk(document);
-      expect(bulk.called).to.be.true;
-      expect(bulk.calledWith({
+      expect(bulk).to.have.been.called;
+      expect(bulk).to.have.been.calledWith({
         index: esConfig.alias,
         body: document,
-        refresh: 'false',
-      })).to.be.true;
+        refresh: false,
+      });
     });
 
     it('can ask for ES to wait document to be available', async () => {

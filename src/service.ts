@@ -93,7 +93,7 @@ export class SearchService<D extends Document> implements Provider<D> {
     return {};
   }
 
-  public async bulk(body: any, refresh: 'wait_for' | 'false' = 'false'): Promise<void> {
+  public async bulk(body: any, refresh: 'wait_for' | false = false): Promise<void> {
     const response = await this.esClient.bulk({
       index: this.esConfig.alias,
       body,
@@ -177,7 +177,10 @@ export class SearchService<D extends Document> implements Provider<D> {
       {
         nested: {
           path: 'positions',
-          query: { match_phrase_prefix: { 'positions.code.text': string } },
+          query: { match_phrase_prefix: { 'positions.code.text': {
+            query: string,
+            max_expansions: 1000,
+          } } },
         },
       },
     ];

@@ -1,3 +1,4 @@
+import { Readable } from 'stream';
 import { Connection as UnsignedConnection } from '@elastic/elasticsearch';
 import * as AWS from 'aws-sdk';
 import RequestSigner from 'aws-sdk/lib/signers/v4';
@@ -30,13 +31,18 @@ class AwsSignedConnection extends UnsignedConnection {
     request.path = params.querystring
       ? `${params.path}/?${params.querystring}`
       : params.path;
-    request.body = params.body;
+    if (typeof params.body === 'string') request.body = params.body;
+    else if (params.body instanceof Buffer) request.body = params.body.toString();
+    else if (params.body instanceof Readable) throw new AwsElasticsearchError('unsupported');
+    else if (params.body !== undefined && params.body !== null) {
+      throw new AwsElasticsearchError('body type unhandled');
+    }
 
     Object.entries(params.headers).forEach(([header, value]) => {
-      if (value === undefined) return;
       if (typeof value === 'string') request.headers[header] = value;
       else if (typeof value === 'number') request.headers[header] = `${value}`;
-      else request.headers[header] = value.join('; ');
+      else if (Array.isArray(value)) request.headers[header] = value.join('; ');
+      else if (value !== undefined) throw new AwsElasticsearchError('header type unhandled');
     });
     request.headers.Host = endpoint.host;
 

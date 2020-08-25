@@ -93,7 +93,7 @@ export class IndexManager {
     index: string = this.esConfig.index,
   ): Promise<string> {
     const { body: { [index]: config } } = await this.esClient.indices
-      .getSettings({ index });
+      .getSettings<any>({ index });
     return config.settings.index.version.created;
   }
 
@@ -101,7 +101,7 @@ export class IndexManager {
     index: string = this.esConfig.index,
   ): Promise<Settings> {
     const { body: { [index]: config } } = await this.esClient.indices
-      .getSettings({ index });
+      .getSettings<any>({ index });
     const autoSettings = ['provided_name', 'creation_date', 'uuid', 'version'];
     autoSettings.forEach(key => delete config.settings.index[key]);
     return config.settings.index;
@@ -112,15 +112,17 @@ export class IndexManager {
     settings: Settings = this.esConfig.settings,
   ): Promise<void> {
     const settigsToPatch = deepPatch(await this.getSettings(index), settings);
-    await this.esClient.indices
-      .putSettings({ index, body: settigsToPatch });
+    if (settigsToPatch) {
+      await this.esClient.indices
+        .putSettings({ index, body: settigsToPatch });
+    }
   }
 
   public async getMappings(
     index: string = this.esConfig.index,
   ): Promise<Mappings> {
     const { body: { [index]: config } } = await this.esClient.indices
-      .getMapping({ index, include_type_name: false });
+      .getMapping<any>({ index, include_type_name: false });
     return config.mappings;
   }
 

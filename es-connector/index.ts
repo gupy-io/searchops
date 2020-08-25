@@ -1,5 +1,5 @@
 import awsSdk from 'aws-sdk';
-import { Client, events } from '@elastic/elasticsearch';
+import { Client } from '@elastic/elasticsearch';
 import { Logger } from 'winston';
 import { AwsSignedConnection, UnsignedConnection } from './aws';
 
@@ -28,7 +28,7 @@ export const createElasticsearch = (
       Connection: awsSdk.config.credentials ? AwsSignedConnection : UnsignedConnection,
       node: `${protocol}://${host}:${port}`,
     });
-    client.on(events.RESPONSE, (_error, result) => {
+    client.on('response', (_error, result) => {
       logger.silly(JSON.stringify(result, null, 2));
       if (result && result.warnings) {
         logger.warn(result.warnings);

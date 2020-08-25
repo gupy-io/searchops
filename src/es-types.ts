@@ -20,7 +20,7 @@ export interface Query {
   query_string?: QueryStringQuery;
   term?: TermQuery;
   terms?: TermsQuery;
-  match_phrase_prefix?: TermQuery;
+  match_phrase_prefix?: MatchPhrasePrefixQuery;
 }
 
 export interface BoolQuery {
@@ -54,6 +54,10 @@ export interface TermQuery {
 
 export interface TermsQuery {
   [field: string]: Value[];
+}
+
+export interface MatchPhrasePrefixQuery {
+  [field: string]: Value | { query: Value; max_expansions?: number };
 }
 
 // #endregion
