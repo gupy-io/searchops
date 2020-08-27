@@ -1,6 +1,5 @@
 import { Client, RequestParams, ApiResponse } from '@elastic/elasticsearch';
 import AJV from 'ajv';
-import { logger } from '../logging';
 import {
   Settings,
   Mappings,
@@ -67,17 +66,20 @@ export class SearchService<D extends Document> implements Provider<D> {
   private esClient: Client;
   private esConfig: Config;
   private validate: AJV.ValidateFunction;
+  private logger: any;
 
-  public constructor({ esClient, esConfig }: {
+  public constructor({ esClient, esConfig, logger }: {
     esClient: Client;
     esConfig: Config;
+    logger: any;
   }) {
     this.esClient = esClient;
     this.esConfig = esConfig;
     this.validate = getValidatorForMapping(esConfig.mappings);
+    this.logger = logger;
   }
 
-  private getAction(item): any {
+  private getAction(item: any): any {
     if (item.create) {
       return item.create;
     }
@@ -101,10 +103,10 @@ export class SearchService<D extends Document> implements Provider<D> {
     });
     if (response.body.errors) {
       const errors = response.body.items
-        .filter(item => !!this.getAction(item).error)
-        .map(item => this.getAction(item).error);
+        .filter((item: any) => !!this.getAction(item).error)
+        .map((item: any) => this.getAction(item).error);
       // This logger is temporary and will be removed soon
-      logger.error('Error on bulk request (complete log)', response.body);
+      this.logger.error('Error on bulk request (complete log)', response.body);
       throw new BulkError('Error on bulk request', errors);
     }
   }
@@ -132,7 +134,7 @@ export class SearchService<D extends Document> implements Provider<D> {
         refresh,
       } as RequestParams.Update<UpdateBody<D>>);
     } catch (error) {
-      logger.error(`Error on indexing document ${doc.id}`, error);
+      this.logger.error(`Error on indexing document ${doc.id}`, error);
     }
   }
 
@@ -145,7 +147,7 @@ export class SearchService<D extends Document> implements Provider<D> {
         routing,
       } as RequestParams.Delete);
     } catch (error) {
-      logger.error(`Error on deleting document ${docId}`, error);
+      this.logger.error(`Error on deleting document ${docId}`, error);
     }
   }
 
@@ -217,7 +219,7 @@ export class SearchService<D extends Document> implements Provider<D> {
         buckets: response.body.aggregations || {},
       };
     } catch (error) {
-      logger.error('Unexpected search error', error);
+      this.logger.error('Unexpected search error', error);
       return { summary: { total: 0 }, results: [], buckets: {} };
     }
   }

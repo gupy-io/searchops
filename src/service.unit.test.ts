@@ -3,6 +3,11 @@ import { expect } from 'chai';
 import { Client } from '@elastic/elasticsearch';
 import { SearchService, Config } from './service';
 
+const fakeLogger = {
+  // eslint-disable-next-line no-console
+  error: console.log,
+};
+
 describe('SearchService', () => {
   context('bulk', () => {
     const bulk = sinon.fake.returns({ body: { errors: false } });
@@ -15,6 +20,7 @@ describe('SearchService', () => {
       const searchService = new SearchService({
         esClient: ({ bulk } as unknown) as Client,
         esConfig: (esConfig as unknown) as Config,
+        logger: fakeLogger,
       });
       const document = 'document';
       await searchService.bulk(document);
@@ -30,6 +36,7 @@ describe('SearchService', () => {
       const searchService = new SearchService({
         esClient: ({ bulk } as unknown) as Client,
         esConfig: (esConfig as unknown) as Config,
+        logger: fakeLogger,
       });
       const document = 'document';
       await searchService.bulk(document, 'wait_for');
@@ -57,6 +64,7 @@ describe('SearchService', () => {
           },
         }) } as unknown) as Client,
         esConfig: (esConfig as unknown) as Config,
+        logger: fakeLogger,
       });
       const document = 'document';
       try {

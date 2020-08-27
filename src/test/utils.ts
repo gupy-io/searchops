@@ -1,8 +1,6 @@
 import { Client } from '@elastic/elasticsearch';
 import { random } from 'faker';
 
-import { logger } from '../../logging';
-import { config } from '../../private-api-config';
 import { Config } from '../service';
 
 
@@ -11,11 +9,12 @@ export function getRandomSnakeCase(): string {
 }
 
 export function getTestClient(): Client {
-  const { elasticHost, elasticPort } = config;
+  const elasticHost = process.env.ELASTIC_HOST ?? 'localhost';
+  const elasticPort = process.env.ELASTIC_PORT ?? '9200';
   const esClient: Client = new Client({ node: `http://${elasticHost}:${elasticPort}` });
   esClient.on('response', (error, result): void => {
-    if (error) logger.error(JSON.stringify(result, null, 2));
-    else logger.silly(JSON.stringify(result, null, 2));
+    // eslint-disable-next-line no-console
+    if (error) console.log(JSON.stringify(result, null, 2));
   });
   return esClient;
 }
@@ -30,7 +29,7 @@ export function getRandomConfig(): Config {
   };
 }
 
-export function collectDeepMembers(object: object, structure: object): object {
+export function collectDeepMembers(object: any, structure: any): object {
   if (typeof structure !== 'object') return object;
   return Object.keys(structure).reduce((sub, key) => ({
     ...sub, [key]: collectDeepMembers(object[key], structure[key]),

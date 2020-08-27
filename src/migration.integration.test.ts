@@ -2,11 +2,11 @@
 // Elasticsearch types follow the snake_case JSON convention
 // Document is in _source, plus other metadata fields with _
 
-import { Client } from '@elastic/elasticsearch';
 import { expect } from 'chai';
 import faker from 'faker';
 import sinon from 'sinon';
 
+import { getTestClient } from './test/utils';
 import { Config } from './service';
 import { IndexManager } from './migration';
 
@@ -15,14 +15,7 @@ const randomSnakeCase = (): string => faker.random.word().replace(/\W/g, '_').to
 describe('Elasticsearch Index Migration @integration tests', () => {
   const sandbox = sinon.createSandbox();
 
-  const elasticHost = process.env.ELASTIC_HOST ?? 'localhost';
-  const elasticPort = process.env.ELASTIC_PORT ?? '9200';
-  const esClient: Client = new Client({ node: `http://${elasticHost}:${elasticPort}` });
-  esClient.on('response', (error, result): void => {
-    // eslint-disable-next-line no-console
-    if (error) console.log(JSON.stringify(result, null, 2));
-  });
-
+  const esClient = getTestClient();
   const esConfig: Config = {
     index: randomSnakeCase(),
     alias: randomSnakeCase(),

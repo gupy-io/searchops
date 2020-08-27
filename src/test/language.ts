@@ -9,6 +9,10 @@ import * as utils from './utils';
 const context = describe;
 const exercise = it;
 
+const fakeLogger = {
+  // eslint-disable-next-line no-console
+  error: console.log,
+};
 
 interface TestDocument extends Document {
   id: string;
@@ -155,7 +159,7 @@ class Scenario {
     const esConfig = utils.getRandomConfig();
 
     this.testWorld = {
-      searchService: new SearchService({ esClient, esConfig }),
+      searchService: new SearchService({ esClient, esConfig, logger: fakeLogger }),
       indexManager: new IndexManager({ esClient, esConfig }),
       document: { id: utils.getRandomSnakeCase() },
       count: 0,
