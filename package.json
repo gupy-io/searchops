@@ -6,7 +6,7 @@
   "types": "out/index.d.ts",
   "scripts": {
     "build": "tsc --build --clean && tsc",
-    "test": "mocha -r ts-node/register -r src/test/setup.ts \"**/*.test.ts\""
+    "test": "mocha -r ts-node/register -r src/test/setup.ts \"./src/**/*.test.ts\""
   },
   "repository": {
     "type": "git",
@@ -23,7 +23,9 @@
   "homepage": "https://github.com/gupy-io/searchops#readme",
   "dependencies": {
     "@elastic/elasticsearch": "^7.9.0",
-    "ajv": "^6.12.4"
+    "ajv": "^6.12.4",
+    "aws-sdk": "^2.743.0",
+    "winston": "^3.3.3"
   },
   "devDependencies": {
     "@types/chai": "^4.2.12",
