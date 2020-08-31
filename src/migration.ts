@@ -2,7 +2,7 @@ import { Client } from '@elastic/elasticsearch';
 
 import { Config } from './service';
 import { Settings, Mappings } from './es-types';
-import { deepEqual, deepPatch } from '../object/deep';
+import { deepEqual, deepPatch } from './object/deep';
 
 export class IndexManager {
   private esClient: Client;
