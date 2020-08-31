@@ -2,8 +2,10 @@
   "name": "searchops",
   "version": "0.0.0",
   "description": "Some description",
-  "main": "index.js",
+  "main": "out/index.js",
+  "types": "out/index.d.ts",
   "scripts": {
+    "build": "tsc",
     "test": "mocha -r ts-node/register -r src/test/setup.ts \"**/*.test.ts\""
   },
   "repository": {
