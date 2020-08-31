@@ -20,6 +20,7 @@ export interface Query {
   query_string?: QueryStringQuery;
   term?: TermQuery;
   terms?: TermsQuery;
+  match?: TermQuery;
   match_phrase_prefix?: MatchPhrasePrefixQuery;
 }
 

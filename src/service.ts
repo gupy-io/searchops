@@ -179,10 +179,7 @@ export class SearchService<D extends Document> implements Provider<D> {
       {
         nested: {
           path: 'positions',
-          query: { match_phrase_prefix: { 'positions.code.text': {
-            query: string,
-            max_expansions: 1000,
-          } } },
+          query: { match: { 'positions.code.text': string } },
         },
       },
     ];
