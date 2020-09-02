@@ -1,18 +1,14 @@
-import { Query } from './es-types';
-import { Document, Provider, Params, Result } from './service';
+import { Query } from "./es-types";
+import { Document, Provider, Params, Result } from "./service";
 
 export class QueryBuilder<D extends Document> {
   private docsProvider: Provider<D>;
   private searchParams: Params;
 
-  public constructor({
-    docsProvider,
-  }: {
-    docsProvider: Provider<D>;
-  }) {
+  public constructor({ docsProvider }: { docsProvider: Provider<D> }) {
     this.docsProvider = docsProvider;
     this.searchParams = {
-      string: '',
+      string: "",
       nested: [],
       filter: [],
       grants: [],
@@ -21,8 +17,8 @@ export class QueryBuilder<D extends Document> {
       window: { from: 0, size: 0 },
     };
     this.searchParams.facets = {
-      status: { terms: { field: 'status' } },
-      recruiters: { terms: { field: 'recruiter.id' } },
+      status: { terms: { field: "status" } },
+      recruiters: { terms: { field: "recruiter.id" } },
     };
   }
 
@@ -38,7 +34,7 @@ export class QueryBuilder<D extends Document> {
 
   public withFilter(field: string, terms: (string | null)[]): QueryBuilder<D> {
     const filter: Query[] = [
-      { terms: { [field]: terms.filter(s => !!s).map(s => `${s}`) } },
+      { terms: { [field]: terms.filter((s) => !!s).map((s) => `${s}`) } },
     ];
     if (terms.includes(null)) {
       filter.push({ bool: { must_not: { exists: { field } } } });
@@ -48,28 +44,35 @@ export class QueryBuilder<D extends Document> {
   }
 
   public withFiltersMatchPhrasePrefix(
-    fields: { field: string; term: string }[],
+    fields: { field: string; term: string }[]
   ): QueryBuilder<D> {
     const filters = fields.map((item) => {
-      const filter: Query =
-          { match_phrase_prefix: { [item.field]: item.term } };
+      const filter: Query = {
+        match_phrase_prefix: { [item.field]: item.term },
+      };
       return filter;
     });
     this.searchParams.filter.push({ bool: { should: filters } });
     return this;
   }
 
-  public withNestedFilter(source: string, field: string, terms: string[]): QueryBuilder<D> {
-    this.searchParams.filter.push({ nested: {
-      path: source,
-      query: { terms: { [`${source}.${field}`]: terms } },
-    } });
+  public withNestedFilter(
+    source: string,
+    field: string,
+    terms: string[]
+  ): QueryBuilder<D> {
+    this.searchParams.filter.push({
+      nested: {
+        path: source,
+        query: { terms: { [`${source}.${field}`]: terms } },
+      },
+    });
     return this;
   }
 
   public withGrants(field: string, terms: (string | null)[]): QueryBuilder<D> {
     const grants: Query[] = [
-      { terms: { [field]: terms.filter(s => !!s).map(s => `${s}`) } },
+      { terms: { [field]: terms.filter((s) => !!s).map((s) => `${s}`) } },
     ];
     if (terms.includes(null)) {
       grants.push({ bool: { must_not: { exists: { field } } } });
@@ -78,15 +81,21 @@ export class QueryBuilder<D extends Document> {
     return this;
   }
 
-  public withNestedGrants(source: string, field: string, terms: string[]): QueryBuilder<D> {
-    this.searchParams.grants.push({ nested: {
-      path: source,
-      query: { terms: { [`${source}.${field}`]: terms } },
-    } });
+  public withNestedGrants(
+    source: string,
+    field: string,
+    terms: string[]
+  ): QueryBuilder<D> {
+    this.searchParams.grants.push({
+      nested: {
+        path: source,
+        query: { terms: { [`${source}.${field}`]: terms } },
+      },
+    });
     return this;
   }
 
-  public withSortBy(field: string, direction: 'asc' | 'desc'): QueryBuilder<D> {
+  public withSortBy(field: string, direction: "asc" | "desc"): QueryBuilder<D> {
     this.searchParams.rerank.push({ [field]: { order: direction } });
     return this;
   }

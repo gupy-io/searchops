@@ -1,9 +1,9 @@
-import { expect } from 'chai';
-import { Suite, describe, it } from 'mocha';
+import { expect } from "chai";
+import { Suite, describe, it } from "mocha";
 
-import { Document, SearchService } from '../service';
-import { IndexManager } from '../migration';
-import * as utils from './utils';
+import { Document, SearchService } from "../service";
+import { IndexManager } from "../migration";
+import * as utils from "./utils";
 
 // plug into mocha
 const context = describe;
@@ -52,7 +52,7 @@ class IndexSteps {
   }
 
   public wasCreated(): IndexSteps {
-    this.testWorld.context += ' was created';
+    this.testWorld.context += " was created";
     this.testWorld.contextSetup.push(async () => {
       await this.testWorld.indexManager.migrate();
     });
@@ -73,7 +73,8 @@ class CountSteps {
   public shouldBe(count: number): CountSteps {
     this.testWorld.context += ` should count be equal to ${count}`;
     this.testWorld.expectationChecks.push(() =>
-      expect(this.testWorld.count).to.be.equal(count));
+      expect(this.testWorld.count).to.be.equal(count)
+    );
     return this;
   }
 }
@@ -86,24 +87,29 @@ class DocumentSteps {
   }
 
   public containing(parts: Partial<TestDocument>): DocumentSteps {
-    this.testWorld.context += ' containing some data';
+    this.testWorld.context += " containing some data";
     this.testWorld.document = { id: this.testWorld.document.id, ...parts };
     return this;
   }
 
   public wasCreated(): DocumentSteps {
-    this.testWorld.context += ' was created';
+    this.testWorld.context += " was created";
     this.testWorld.contextSetup.push(async () => {
       await this.testWorld.searchService.index(
-        this.testWorld.document, 'wait_for');
+        this.testWorld.document,
+        "wait_for"
+      );
     });
     return this;
   }
 
   public shouldContain(parts: Partial<TestDocument>): DocumentSteps {
-    this.testWorld.expectation += ' should contain the specified parts';
+    this.testWorld.expectation += " should contain the specified parts";
     this.testWorld.expectationChecks.push(() => {
-      const intersection = utils.collectDeepMembers(this.testWorld.document, parts);
+      const intersection = utils.collectDeepMembers(
+        this.testWorld.document,
+        parts
+      );
       expect(intersection).to.deep.equal(parts);
     });
     return this;
@@ -118,30 +124,35 @@ class ServiceSteps {
   }
 
   public requestsToIndex(parts?: Partial<TestDocument>): ServiceSteps {
-    this.testWorld.exercise += ' requests to update';
+    this.testWorld.exercise += " requests to update";
     this.testWorld.exerciseRoutines.push(async () => {
-      await this.testWorld.searchService.index({
-        id: this.testWorld.document.id,
-        ...(parts || this.testWorld.document),
-      }, 'wait_for');
+      await this.testWorld.searchService.index(
+        {
+          id: this.testWorld.document.id,
+          ...(parts || this.testWorld.document),
+        },
+        "wait_for"
+      );
     });
     return this;
   }
 
   public retrievesTheDocument(): ServiceSteps {
-    this.testWorld.exercise += ' retrieves the document';
+    this.testWorld.exercise += " retrieves the document";
     this.testWorld.exerciseRoutines.push(async () => {
-      this.testWorld.document = await this.testWorld.searchService
-        .get(this.testWorld.document.id);
+      this.testWorld.document = await this.testWorld.searchService.get(
+        this.testWorld.document.id
+      );
     });
     return this;
   }
 
   public requestCount(): ServiceSteps {
-    this.testWorld.exercise += ' request count';
+    this.testWorld.exercise += " request count";
     this.testWorld.exerciseRoutines.push(async () => {
-      this.testWorld.count = await this.testWorld.searchService
-        .count({ query: { match_all: {} } });
+      this.testWorld.count = await this.testWorld.searchService.count({
+        query: { match_all: {} },
+      });
     });
     return this;
   }
@@ -159,16 +170,20 @@ class Scenario {
     const esConfig = utils.getRandomConfig();
 
     this.testWorld = {
-      searchService: new SearchService({ esClient, esConfig, logger: fakeLogger }),
+      searchService: new SearchService({
+        esClient,
+        esConfig,
+        logger: fakeLogger,
+      }),
       indexManager: new IndexManager({ esClient, esConfig }),
       document: { id: utils.getRandomSnakeCase() },
       count: 0,
-      context: '',
+      context: "",
       contextSetup: [],
       contextTeardown: [],
-      exercise: '',
+      exercise: "",
       exerciseRoutines: [],
-      expectation: '',
+      expectation: "",
       expectationChecks: [],
     };
     this.indexSteps = new IndexSteps(this.testWorld);
@@ -178,46 +193,53 @@ class Scenario {
   }
 
   public givenTheIndex(): IndexSteps {
-    this.testWorld.context = 'given the index';
+    this.testWorld.context = "given the index";
     return this.indexSteps;
   }
 
   public givenTheDocument(): DocumentSteps {
-    this.testWorld.context = 'given the document';
+    this.testWorld.context = "given the document";
     return this.documentSteps;
   }
 
   public whenTheService(): ServiceSteps {
-    this.testWorld.exercise = 'when the service';
+    this.testWorld.exercise = "when the service";
     return this.operationSteps;
   }
 
   public thenTheDocument(): DocumentSteps {
-    this.testWorld.expectation = 'then the document';
+    this.testWorld.expectation = "then the document";
     return this.documentSteps;
   }
 
   public thenTheCount(): CountSteps {
-    this.testWorld.expectation = 'then the count';
+    this.testWorld.expectation = "then the count";
     return this.countSteps;
   }
 
   public build(): Suite {
     return context(this.testWorld.context, () => {
-      this.testWorld.contextSetup.forEach(setUp => before(setUp));
+      this.testWorld.contextSetup.forEach((setUp) => before(setUp));
       context(this.testWorld.exercise, () => {
         exercise(this.testWorld.expectation, async () => {
-          await this.testWorld.exerciseRoutines
-            .reduce((chain, routine) => chain.then(routine), Promise.resolve());
-          this.testWorld.expectationChecks.forEach(expectation => expectation());
+          await this.testWorld.exerciseRoutines.reduce(
+            (chain, routine) => chain.then(routine),
+            Promise.resolve()
+          );
+          this.testWorld.expectationChecks.forEach((expectation) =>
+            expectation()
+          );
         });
-        this.testWorld.contextTeardown.forEach(tearDown => after(tearDown));
+        this.testWorld.contextTeardown.forEach((tearDown) => after(tearDown));
       });
     });
   }
 }
 
-export function scenario(description: string, definition: (_: Scenario) => void): Suite {
+export function scenario(
+  description: string,
+  definition: (_: Scenario) => void
+): Suite {
   return context(description, () => {
     const _ = new Scenario();
     definition(_);

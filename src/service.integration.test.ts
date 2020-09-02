@@ -1,107 +1,97 @@
-import { scenario } from './test/language';
+import { scenario } from "./test/language";
 
-describe('SearchService @integration', () => {
-  scenario('Creating new documents', (_) => {
-    _.givenTheIndex()
-      .wasCreated();
-    _.givenTheDocument()
-      .containing({ title: 'Dr Who' });
-    _.whenTheService()
-      .requestsToIndex()
-      .retrievesTheDocument();
-    _.thenTheDocument()
-      .shouldContain({ title: 'Dr Who' });
+describe("SearchService @integration", () => {
+  scenario("Creating new documents", (_) => {
+    _.givenTheIndex().wasCreated();
+    _.givenTheDocument().containing({ title: "Dr Who" });
+    _.whenTheService().requestsToIndex().retrievesTheDocument();
+    _.thenTheDocument().shouldContain({ title: "Dr Who" });
   });
 
-  scenario('Changing nothing', (_) => {
-    _.givenTheIndex()
-      .wasCreated();
-    _.givenTheDocument()
-      .containing({ title: 'Pokémon' })
-      .wasCreated();
-    _.whenTheService()
-      .requestsToIndex({})
-      .retrievesTheDocument();
-    _.thenTheDocument()
-      .shouldContain({ title: 'Pokémon' });
+  scenario("Changing nothing", (_) => {
+    _.givenTheIndex().wasCreated();
+    _.givenTheDocument().containing({ title: "Pokémon" }).wasCreated();
+    _.whenTheService().requestsToIndex({}).retrievesTheDocument();
+    _.thenTheDocument().shouldContain({ title: "Pokémon" });
   });
 
-  scenario('Creating new fields', (_) => {
-    _.givenTheIndex()
-      .wasCreated();
-    _.givenTheDocument()
-      .containing({ title: 'Pokémon' })
-      .wasCreated();
+  scenario("Creating new fields", (_) => {
+    _.givenTheIndex().wasCreated();
+    _.givenTheDocument().containing({ title: "Pokémon" }).wasCreated();
     _.whenTheService()
-      .requestsToIndex({ subtitle: 'FireRed Version' })
+      .requestsToIndex({ subtitle: "FireRed Version" })
       .retrievesTheDocument();
-    _.thenTheDocument()
-      .shouldContain({ title: 'Pokémon', subtitle: 'FireRed Version' });
+    _.thenTheDocument().shouldContain({
+      title: "Pokémon",
+      subtitle: "FireRed Version",
+    });
   });
 
-  scenario('Creating new deeply nested fields', (_) => {
-    _.givenTheIndex()
-      .wasCreated();
+  scenario("Creating new deeply nested fields", (_) => {
+    _.givenTheIndex().wasCreated();
     _.givenTheDocument()
-      .containing({ author: { address: { street: 'Sesame' } } })
+      .containing({ author: { address: { street: "Sesame" } } })
       .wasCreated();
     _.whenTheService()
-      .requestsToIndex({ author: {
-        address: { country: 'Muppetland' },
-        contact: { email: 'jim@muppets.fun' },
-      } })
+      .requestsToIndex({
+        author: {
+          address: { country: "Muppetland" },
+          contact: { email: "jim@muppets.fun" },
+        },
+      })
       .retrievesTheDocument();
-    _.thenTheDocument()
-      .shouldContain({ author: {
-        address: { street: 'Sesame', country: 'Muppetland' },
-        contact: { email: 'jim@muppets.fun' },
-      } });
+    _.thenTheDocument().shouldContain({
+      author: {
+        address: { street: "Sesame", country: "Muppetland" },
+        contact: { email: "jim@muppets.fun" },
+      },
+    });
   });
 
-  scenario('Updating old fields', (_) => {
-    _.givenTheIndex()
-      .wasCreated();
+  scenario("Updating old fields", (_) => {
+    _.givenTheIndex().wasCreated();
     _.givenTheDocument()
-      .containing({ title: 'Pokémon', subtitle: 'Green Version' })
+      .containing({ title: "Pokémon", subtitle: "Green Version" })
       .wasCreated();
     _.whenTheService()
-      .requestsToIndex({ subtitle: 'LeafGreen Version' })
+      .requestsToIndex({ subtitle: "LeafGreen Version" })
       .retrievesTheDocument();
-    _.thenTheDocument()
-      .shouldContain({ title: 'Pokémon', subtitle: 'LeafGreen Version' });
+    _.thenTheDocument().shouldContain({
+      title: "Pokémon",
+      subtitle: "LeafGreen Version",
+    });
   });
 
-  scenario('Updating old deeply nested fields', (_) => {
-    _.givenTheIndex()
-      .wasCreated();
+  scenario("Updating old deeply nested fields", (_) => {
+    _.givenTheIndex().wasCreated();
     _.givenTheDocument()
-      .containing({ author: {
-        address: { street: 'Sesame', country: 'Muppetland' },
-        contact: { email: 'jim@muppets.fun' },
-      } })
+      .containing({
+        author: {
+          address: { street: "Sesame", country: "Muppetland" },
+          contact: { email: "jim@muppets.fun" },
+        },
+      })
       .wasCreated();
     _.whenTheService()
-      .requestsToIndex({ author: {
-        address: { country: 'Puppetland' },
-        contact: { email: 'jim@muppets.org' },
-      } })
+      .requestsToIndex({
+        author: {
+          address: { country: "Puppetland" },
+          contact: { email: "jim@muppets.org" },
+        },
+      })
       .retrievesTheDocument();
-    _.thenTheDocument()
-      .shouldContain({ author: {
-        address: { street: 'Sesame', country: 'Puppetland' },
-        contact: { email: 'jim@muppets.org' },
-      } });
+    _.thenTheDocument().shouldContain({
+      author: {
+        address: { street: "Sesame", country: "Puppetland" },
+        contact: { email: "jim@muppets.org" },
+      },
+    });
   });
 
-  scenario('Counting documents', (_) => {
-    _.givenTheIndex()
-      .wasCreated();
-    _.givenTheDocument()
-      .containing({ title: 'Digimón' })
-      .wasCreated();
-    _.whenTheService()
-      .requestCount();
-    _.thenTheCount()
-      .shouldBe(1);
+  scenario("Counting documents", (_) => {
+    _.givenTheIndex().wasCreated();
+    _.givenTheDocument().containing({ title: "Digimón" }).wasCreated();
+    _.whenTheService().requestCount();
+    _.thenTheCount().shouldBe(1);
   });
 });

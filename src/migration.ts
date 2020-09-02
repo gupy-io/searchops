@@ -1,8 +1,8 @@
-import { Client } from '@elastic/elasticsearch';
+import { Client } from "@elastic/elasticsearch";
 
-import { Config } from './service';
-import { Settings, Mappings } from './es-types';
-import { deepEqual, deepPatch } from './object/deep';
+import { Config } from "./service";
+import { Settings, Mappings } from "./es-types";
+import { deepEqual, deepPatch } from "./object/deep";
 
 export class IndexManager {
   private esClient: Client;
@@ -68,9 +68,7 @@ export class IndexManager {
     await this.deleteIndex(stageIndex);
   }
 
-  public async createIndex(
-    name: string = this.esConfig.index,
-  ): Promise<void> {
+  public async createIndex(name: string = this.esConfig.index): Promise<void> {
     await this.esClient.indices.create({
       index: name,
       include_type_name: false,
@@ -82,93 +80,103 @@ export class IndexManager {
   }
 
   public async existsIndex(
-    index: string = this.esConfig.index,
+    index: string = this.esConfig.index
   ): Promise<boolean> {
-    const { body: indexExists } = await this.esClient.indices
-      .exists({ index });
+    const { body: indexExists } = await this.esClient.indices.exists({ index });
     return indexExists;
   }
 
   public async getVersion(
-    index: string = this.esConfig.index,
+    index: string = this.esConfig.index
   ): Promise<string> {
-    const { body: { [index]: config } } = await this.esClient.indices
-      .getSettings<any>({ index });
+    const {
+      body: { [index]: config },
+    } = await this.esClient.indices.getSettings<any>({ index });
     return config.settings.index.version.created;
   }
 
   public async getSettings(
-    index: string = this.esConfig.index,
+    index: string = this.esConfig.index
   ): Promise<Settings> {
-    const { body: { [index]: config } } = await this.esClient.indices
-      .getSettings<any>({ index });
-    const autoSettings = ['provided_name', 'creation_date', 'uuid', 'version'];
-    autoSettings.forEach(key => delete config.settings.index[key]);
+    const {
+      body: { [index]: config },
+    } = await this.esClient.indices.getSettings<any>({ index });
+    const autoSettings = ["provided_name", "creation_date", "uuid", "version"];
+    autoSettings.forEach((key) => delete config.settings.index[key]);
     return config.settings.index;
   }
 
   public async putSettings(
     index: string = this.esConfig.index,
-    settings: Settings = this.esConfig.settings,
+    settings: Settings = this.esConfig.settings
   ): Promise<void> {
     const settigsToPatch = deepPatch(await this.getSettings(index), settings);
     if (settigsToPatch) {
-      await this.esClient.indices
-        .putSettings({ index, body: settigsToPatch });
+      await this.esClient.indices.putSettings({ index, body: settigsToPatch });
     }
   }
 
   public async getMappings(
-    index: string = this.esConfig.index,
+    index: string = this.esConfig.index
   ): Promise<Mappings> {
-    const { body: { [index]: config } } = await this.esClient.indices
-      .getMapping<any>({ index, include_type_name: false });
+    const {
+      body: { [index]: config },
+    } = await this.esClient.indices.getMapping<any>({
+      index,
+      include_type_name: false,
+    });
     return config.mappings;
   }
 
   public async putMappings(
     index: string = this.esConfig.index,
-    mappings: Mappings = this.esConfig.mappings,
+    mappings: Mappings = this.esConfig.mappings
   ): Promise<void> {
-    await this.esClient.indices
-      .putMapping({ index, body: mappings, include_type_name: false });
+    await this.esClient.indices.putMapping({
+      index,
+      body: mappings,
+      include_type_name: false,
+    });
     if (this.triggerUpdate) {
-      await this.esClient
-        .updateByQuery({ index, conflicts: 'proceed', wait_for_completion: true });
+      await this.esClient.updateByQuery({
+        index,
+        conflicts: "proceed",
+        wait_for_completion: true,
+      });
     }
   }
 
-  public async deleteIndex(
-    name: string = this.esConfig.index,
-  ): Promise<void> {
+  public async deleteIndex(name: string = this.esConfig.index): Promise<void> {
     await this.esClient.indices.delete({ index: name });
   }
 
   public async assignAlias(
     index: string = this.esConfig.index,
-    alias: string = this.esConfig.alias,
+    alias: string = this.esConfig.alias
   ): Promise<void> {
-    await this.esClient.indices.updateAliases({ body: { actions: [
-      { add: { index, alias } },
-    ] } });
+    await this.esClient.indices.updateAliases({
+      body: { actions: [{ add: { index, alias } }] },
+    });
   }
 
   public async existsAlias(
     index: string = this.esConfig.index,
-    name: string = this.esConfig.alias,
+    name: string = this.esConfig.alias
   ): Promise<boolean> {
-    const { body: aliasExists } = await this.esClient.indices
-      .existsAlias({ index, name });
+    const { body: aliasExists } = await this.esClient.indices.existsAlias({
+      index,
+      name,
+    });
     return aliasExists;
   }
 
   public async retireAlias(
     index: string = this.esConfig.index,
-    alias: string = this.esConfig.alias,
+    alias: string = this.esConfig.alias
   ): Promise<void> {
-    await this.esClient.indices.updateAliases({ body: { actions: [
-      { remove: { index, alias } },
-    ] } });
+    await this.esClient.indices.updateAliases({
+      body: { actions: [{ remove: { index, alias } }] },
+    });
   }
 
   public async openIndex(name: string = this.esConfig.index): Promise<void> {
@@ -185,7 +193,10 @@ export class IndexManager {
     });
   }
 
-  public async duplicate(sourceName: string, targetname: string): Promise<void> {
+  public async duplicate(
+    sourceName: string,
+    targetname: string
+  ): Promise<void> {
     await this.esClient.reindex({
       body: { source: { index: sourceName }, dest: { index: targetname } },
     });
@@ -193,10 +204,12 @@ export class IndexManager {
 
   public async swap(sourceName: string, targetName: string): Promise<void> {
     await this.esClient.indices.updateAliases({
-      body: { actions: [
-        { remove: { index: sourceName, alias: this.esConfig.alias } },
-        { add: { index: targetName, alias: this.esConfig.alias } },
-      ] },
+      body: {
+        actions: [
+          { remove: { index: sourceName, alias: this.esConfig.alias } },
+          { add: { index: targetName, alias: this.esConfig.alias } },
+        ],
+      },
     });
   }
 }

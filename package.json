@@ -4,7 +4,9 @@
   "description": "Some description",
   "main": "lib/main.js",
   "types": "lib/index.d.ts",
-  "files": ["lib"],
+  "files": [
+    "lib"
+  ],
   "scripts": {
     "build": "tsc --build --clean && tsc",
     "test": "mocha -r ts-node/register -r src/test/setup.ts \"./src/**/*.test.ts\""
@@ -36,11 +38,15 @@
     "@types/node": "^14.6.0",
     "@types/sinon": "^9.0.5",
     "@types/sinon-chai": "^3.2.4",
+    "@typescript-eslint/eslint-plugin": "^4.0.1",
+    "@typescript-eslint/parser": "^4.0.1",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
+    "eslint": "^7.8.1",
     "faker": "^5.0.0",
     "husky": "^4.2.5",
     "mocha": "^8.1.1",
+    "prettier": "^2.1.1",
     "sinon": "^9.0.3",
     "sinon-chai": "^3.5.0",
     "ts-node": "^9.0.0",

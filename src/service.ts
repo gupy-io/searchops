@@ -1,5 +1,5 @@
-import { Client, RequestParams, ApiResponse } from '@elastic/elasticsearch';
-import AJV from 'ajv';
+import { Client, RequestParams, ApiResponse } from "@elastic/elasticsearch";
+import AJV from "ajv";
 import {
   Settings,
   Mappings,
@@ -9,8 +9,8 @@ import {
   Sort,
   Aggregations,
   SearchResponse,
-} from './es-types';
-import { getValidatorForMapping } from './validation';
+} from "./es-types";
+import { getValidatorForMapping } from "./validation";
 
 export interface Document {
   id: string;
@@ -68,7 +68,11 @@ export class SearchService<D extends Document> implements Provider<D> {
   private validate: AJV.ValidateFunction;
   private logger: any;
 
-  public constructor({ esClient, esConfig, logger }: {
+  public constructor({
+    esClient,
+    esConfig,
+    logger,
+  }: {
     esClient: Client;
     esConfig: Config;
     logger: any;
@@ -95,7 +99,10 @@ export class SearchService<D extends Document> implements Provider<D> {
     return {};
   }
 
-  public async bulk(body: any, refresh: 'wait_for' | false = false): Promise<void> {
+  public async bulk(
+    body: any,
+    refresh: "wait_for" | false = false
+  ): Promise<void> {
     const response = await this.esClient.bulk({
       index: this.esConfig.alias,
       body,
@@ -106,24 +113,29 @@ export class SearchService<D extends Document> implements Provider<D> {
         .filter((item: any) => !!this.getAction(item).error)
         .map((item: any) => this.getAction(item).error);
       // This logger is temporary and will be removed soon
-      this.logger.error('Error on bulk request (complete log)', response.body);
-      throw new BulkError('Error on bulk request', errors);
+      this.logger.error("Error on bulk request (complete log)", response.body);
+      throw new BulkError("Error on bulk request", errors);
     }
   }
 
-  public async get(id: D['id']): Promise<D> {
-    const response: ApiResponse<any> = await this.esClient
-      .get({ id, index: this.esConfig.alias });
+  public async get(id: D["id"]): Promise<D> {
+    const response: ApiResponse<any> = await this.esClient.get({
+      id,
+      index: this.esConfig.alias,
+    });
     return response.body._source;
   }
 
-  public async index(doc: D, refresh: 'wait_for' | 'false' = 'false'): Promise<void> {
+  public async index(
+    doc: D,
+    refresh: "wait_for" | "false" = "false"
+  ): Promise<void> {
     try {
       const valid = this.validate(doc);
       if (!valid) {
         throw new ValidationError(
-          'Document did not pass mapping pre-validation',
-          { doc, mapping: this.esConfig.mappings, errors: this.validate.errors },
+          "Document did not pass mapping pre-validation",
+          { doc, mapping: this.esConfig.mappings, errors: this.validate.errors }
         );
       }
       await this.esClient.update({
@@ -138,7 +150,7 @@ export class SearchService<D extends Document> implements Provider<D> {
     }
   }
 
-  public async delete(docId: Document['id'], routing?: string): Promise<void> {
+  public async delete(docId: Document["id"], routing?: string): Promise<void> {
     try {
       await this.esClient.delete({
         id: `${docId}`,
@@ -152,7 +164,7 @@ export class SearchService<D extends Document> implements Provider<D> {
   }
 
   private checkIfIsBooleanQuery(query: string): boolean {
-    return query.includes(':');
+    return query.includes(":");
   }
 
   private getshould(string: string, nested: string[]): Query | Query[] {
@@ -162,9 +174,12 @@ export class SearchService<D extends Document> implements Provider<D> {
     if (isBooleanQuery) {
       return {
         bool: {
-          should: [{ query_string: { query: string } }, ...nested.map(
-            path => ({ nested: { path, query: { query_string: { query: string } } } }),
-          )],
+          should: [
+            { query_string: { query: string } },
+            ...nested.map((path) => ({
+              nested: { path, query: { query_string: { query: string } } },
+            })),
+          ],
         },
       };
     }
@@ -174,12 +189,12 @@ export class SearchService<D extends Document> implements Provider<D> {
         match_phrase_prefix: { name: string },
       },
       {
-        match_phrase_prefix: { 'code.text': string },
+        match_phrase_prefix: { "code.text": string },
       },
       {
         nested: {
-          path: 'positions',
-          query: { match: { 'positions.code.text': string } },
+          path: "positions",
+          query: { match: { "positions.code.text": string } },
         },
       },
     ];
@@ -189,20 +204,26 @@ export class SearchService<D extends Document> implements Provider<D> {
     const { string, nested, filter, grants, facets, rerank, window } = params;
     try {
       const searchBody: SearchBody = {
-        query: { bool: {
-          should: this.getshould(string, nested),
-          minimum_should_match: 1,
-          filter: { bool: {
-            must: filter,
-            should: grants,
-            minimum_should_match: grants.length > 0 ? 1 : 0,
-          } },
-        } },
+        query: {
+          bool: {
+            should: this.getshould(string, nested),
+            minimum_should_match: 1,
+            filter: {
+              bool: {
+                must: filter,
+                should: grants,
+                minimum_should_match: grants.length > 0 ? 1 : 0,
+              },
+            },
+          },
+        },
         sort: rerank,
         aggs: facets,
       };
 
-      const response: ApiResponse<SearchResponse<D>> = await this.esClient.search({
+      const response: ApiResponse<SearchResponse<
+        D
+      >> = await this.esClient.search({
         index: this.esConfig.alias,
         type: this.esConfig.dtype,
         body: searchBody,
@@ -216,12 +237,12 @@ export class SearchService<D extends Document> implements Provider<D> {
         buckets: response.body.aggregations || {},
       };
     } catch (error) {
-      this.logger.error('Unexpected search error', error);
+      this.logger.error("Unexpected search error", error);
       return { summary: { total: 0 }, results: [], buckets: {} };
     }
   }
 
-  public async count(body: RequestParams.Count['body']): Promise<number> {
+  public async count(body: RequestParams.Count["body"]): Promise<number> {
     try {
       const response = await this.esClient.count({
         index: this.esConfig.alias,
@@ -230,7 +251,7 @@ export class SearchService<D extends Document> implements Provider<D> {
       } as RequestParams.Count);
       return response.body.count;
     } catch (error) {
-      if (error.message === 'search_phase_execution_exception') return 0;
+      if (error.message === "search_phase_execution_exception") return 0;
       throw error;
     }
   }

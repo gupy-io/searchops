@@ -66,8 +66,8 @@ export interface MatchPhrasePrefixQuery {
 // #region Sort
 export interface Sort {
   [key: string]: {
-    order?: 'asc' | 'desc';
-    missing?: '_last' | '_first' | Value;
+    order?: "asc" | "desc";
+    missing?: "_last" | "_first" | Value;
   };
 }
 // #endregion
@@ -93,7 +93,7 @@ export interface SearchResponse<T> {
   took: number;
   timed_out: boolean;
   hits: {
-    total: { value: number; relation: 'eq' | 'gte' };
+    total: { value: number; relation: "eq" | "gte" };
     max_score: number;
     hits: Hit<T>[];
   };
@@ -112,7 +112,7 @@ export interface Hit<T> {
 // #region Mappings
 export interface Mappings {
   _routing?: { required: boolean };
-  dynamic?: boolean | 'strict';
+  dynamic?: boolean | "strict";
   properties?: Properties;
 }
 
@@ -120,40 +120,39 @@ export interface Properties {
   [field: string]: Mapping;
 }
 
-export type Mapping
-  = BooleanMapping
+export type Mapping =
+  | BooleanMapping
   | JoinMapping
   | KeywordMapping
   | NestedMapping
   | ObjectMapping
   | SimpleMapping
-  | TextMapping
-  ;
+  | TextMapping;
 
 export interface BooleanMapping {
-  type: 'boolean';
+  type: "boolean";
   null_value?: boolean;
 }
 export interface JoinMapping {
-  type: 'join';
+  type: "join";
   relations: { [key: string]: string };
 }
 
 export interface KeywordMapping {
-  type: 'keyword';
+  type: "keyword";
   ignore_above?: number;
   null_value?: string;
   fields?: Properties;
 }
 
 export interface NestedMapping {
-  type: 'nested';
+  type: "nested";
   properties?: Properties;
 }
 
 export interface ObjectMapping {
-  type?: 'object';
-  dynamic?: boolean | 'strict';
+  type?: "object";
+  dynamic?: boolean | "strict";
   enabled?: boolean;
   properties?: Properties;
 }
@@ -164,38 +163,32 @@ export interface SimpleMapping {
 }
 
 export interface TextMapping {
-  type: 'text';
+  type: "text";
   analyzer?: MappingAnalyzer;
   fields?: Properties;
 }
 
-export type SimpleType
-  = 'long'
-  | 'integer'
-  | 'short'
-  | 'byte'
-  | 'double'
-  | 'float'
-  | 'half_float'
-  | 'scaled_float'
-  | 'date'
-  | 'date_nanos'
-  | 'binary'
-  | 'integer_range'
-  | 'float_range'
-  | 'long_range'
-  | 'double_range'
-  | 'date_range'
-  | 'geo_point'
-  | 'geo_shape'
-  ;
+export type SimpleType =
+  | "long"
+  | "integer"
+  | "short"
+  | "byte"
+  | "double"
+  | "float"
+  | "half_float"
+  | "scaled_float"
+  | "date"
+  | "date_nanos"
+  | "binary"
+  | "integer_range"
+  | "float_range"
+  | "long_range"
+  | "double_range"
+  | "date_range"
+  | "geo_point"
+  | "geo_shape";
 
-export type MappingAnalyzer
-  = 'english'
-  | 'spanish'
-  | 'portuguese'
-  | string // TODO: couple with custom analyzer without allowing any string
-  ;
+export type MappingAnalyzer = "english" | "spanish" | "portuguese" | string; // TODO: couple with custom analyzer without allowing any string
 // #endregion
 
 // #region Settings
