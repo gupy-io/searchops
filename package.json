@@ -8,8 +8,10 @@
     "lib"
   ],
   "scripts": {
-    "build": "tsc --build --clean && tsc",
-    "test": "mocha -r ts-node/register -r src/test/setup.ts \"./src/**/*.test.ts\""
+    "format": "prettier --write ./src/**/*.{js,ts}",
+    "lint": "eslint . --ext .js,.ts",
+    "test": "mocha -r ts-node/register -r src/test/setup.ts \"./src/**/*.test.ts\"",
+    "build": "tsc --build --clean && tsc"
   },
   "repository": {
     "type": "git",
@@ -43,6 +45,7 @@
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "eslint": "^7.8.1",
+    "eslint-config-prettier": "^6.11.0",
     "faker": "^5.0.0",
     "husky": "^4.2.5",
     "mocha": "^8.1.1",

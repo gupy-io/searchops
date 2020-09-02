@@ -1,7 +1,9 @@
-const { removeUndefined, removeUndefinedOfItems } = require('./remove-undefined');
+const {
+  removeUndefined,
+  removeUndefinedOfItems,
+} = require("./remove-undefined");
 
 module.exports = {
   removeUndefined,
   removeUndefinedOfItems,
 };
-
