@@ -2,11 +2,9 @@
   "name": "searchops",
   "version": "0.0.0",
   "description": "Some description",
-  "main": "lib/main.js",
+  "main": "lib/index.js",
   "types": "lib/index.d.ts",
-  "files": [
-    "lib"
-  ],
+  "files": ["lib"],
   "scripts": {
     "format": "prettier --write ./src/**/*.{js,ts}",
     "lint": "eslint . --ext .js,.ts",

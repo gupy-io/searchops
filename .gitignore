@@ -1,8 +1,7 @@
 # Dependency directories
 node_modules/
 
-# TypeScript Builds
-lib/
+# TypeScript Cache
 *.tsbuildinfo
 
 ### Node ###
