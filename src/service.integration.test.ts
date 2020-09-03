@@ -1,21 +1,22 @@
-import { scenario } from "./test/language";
+import { describe } from "@jest/globals";
+import { scenario as context } from "./test/language";
 
 describe("SearchService @integration", () => {
-  scenario("Creating new documents", (_) => {
+  context("Creating new documents", (_) => {
     _.givenTheIndex().wasCreated();
     _.givenTheDocument().containing({ title: "Dr Who" });
     _.whenTheService().requestsToIndex().retrievesTheDocument();
     _.thenTheDocument().shouldContain({ title: "Dr Who" });
   });
 
-  scenario("Changing nothing", (_) => {
+  context("Changing nothing", (_) => {
     _.givenTheIndex().wasCreated();
     _.givenTheDocument().containing({ title: "Pokémon" }).wasCreated();
     _.whenTheService().requestsToIndex({}).retrievesTheDocument();
     _.thenTheDocument().shouldContain({ title: "Pokémon" });
   });
 
-  scenario("Creating new fields", (_) => {
+  context("Creating new fields", (_) => {
     _.givenTheIndex().wasCreated();
     _.givenTheDocument().containing({ title: "Pokémon" }).wasCreated();
     _.whenTheService()
@@ -27,7 +28,7 @@ describe("SearchService @integration", () => {
     });
   });
 
-  scenario("Creating new deeply nested fields", (_) => {
+  context("Creating new deeply nested fields", (_) => {
     _.givenTheIndex().wasCreated();
     _.givenTheDocument()
       .containing({ author: { address: { street: "Sesame" } } })
@@ -48,7 +49,7 @@ describe("SearchService @integration", () => {
     });
   });
 
-  scenario("Updating old fields", (_) => {
+  context("Updating old fields", (_) => {
     _.givenTheIndex().wasCreated();
     _.givenTheDocument()
       .containing({ title: "Pokémon", subtitle: "Green Version" })
@@ -62,7 +63,7 @@ describe("SearchService @integration", () => {
     });
   });
 
-  scenario("Updating old deeply nested fields", (_) => {
+  context("Updating old deeply nested fields", (_) => {
     _.givenTheIndex().wasCreated();
     _.givenTheDocument()
       .containing({
@@ -88,7 +89,7 @@ describe("SearchService @integration", () => {
     });
   });
 
-  scenario("Counting documents", (_) => {
+  context("Counting documents", (_) => {
     _.givenTheIndex().wasCreated();
     _.givenTheDocument().containing({ title: "Digimón" }).wasCreated();
     _.whenTheService().requestCount();

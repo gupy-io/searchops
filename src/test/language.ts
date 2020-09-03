@@ -1,17 +1,15 @@
-import { expect } from "chai";
-import { Suite, describe, it } from "mocha";
+import { describe, test, expect, beforeAll, afterAll } from "@jest/globals";
 
 import { Document, SearchService } from "../service";
 import { IndexManager } from "../migration";
 import * as utils from "./utils";
 
-// plug into mocha
+// plug into jest
 const context = describe;
-const exercise = it;
+const exercise = test;
 
 const fakeLogger = {
-  // eslint-disable-next-line no-console
-  error: console.log,
+  error: () => ({}),
 };
 
 interface TestDocument extends Document {
@@ -73,7 +71,7 @@ class CountSteps {
   public shouldBe(count: number): CountSteps {
     this.testWorld.context += ` should count be equal to ${count}`;
     this.testWorld.expectationChecks.push(() =>
-      expect(this.testWorld.count).to.be.equal(count)
+      expect(this.testWorld.count).toEqual(count)
     );
     return this;
   }
@@ -110,7 +108,7 @@ class DocumentSteps {
         this.testWorld.document,
         parts
       );
-      expect(intersection).to.deep.equal(parts);
+      expect(intersection).toEqual(parts);
     });
     return this;
   }
@@ -217,9 +215,9 @@ class Scenario {
     return this.countSteps;
   }
 
-  public build(): Suite {
-    return context(this.testWorld.context, () => {
-      this.testWorld.contextSetup.forEach((setUp) => before(setUp));
+  public build(): void {
+    context(this.testWorld.context, () => {
+      this.testWorld.contextSetup.forEach((setUp) => beforeAll(setUp) as unknown);
       context(this.testWorld.exercise, () => {
         exercise(this.testWorld.expectation, async () => {
           await this.testWorld.exerciseRoutines.reduce(
@@ -230,7 +228,7 @@ class Scenario {
             expectation()
           );
         });
-        this.testWorld.contextTeardown.forEach((tearDown) => after(tearDown));
+        this.testWorld.contextTeardown.forEach((tearDown) => afterAll(tearDown) as unknown);
       });
     });
   }
@@ -239,7 +237,7 @@ class Scenario {
 export function scenario(
   description: string,
   definition: (_: Scenario) => void
-): Suite {
+): void {
   return context(description, () => {
     const _ = new Scenario();
     definition(_);

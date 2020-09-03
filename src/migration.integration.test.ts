@@ -1,10 +1,5 @@
-/* eslint-disable @typescript-eslint/camelcase */
-// Elasticsearch types follow the snake_case JSON convention
-// Document is in _source, plus other metadata fields with _
-
-import { expect } from "chai";
+import { jest, expect, describe, describe as context, it, beforeEach, afterEach } from "@jest/globals";
 import faker from "faker";
-import sinon from "sinon";
 
 import { getTestClient } from "./test/utils";
 import { Config } from "./service";
@@ -14,8 +9,6 @@ const randomSnakeCase = (): string =>
   faker.random.word().replace(/\W/g, "_").toLowerCase();
 
 describe("Elasticsearch Index Migration @integration tests", () => {
-  const sandbox = sinon.createSandbox();
-
   const esClient = getTestClient();
   const esConfig: Config = {
     index: randomSnakeCase(),
@@ -32,31 +25,31 @@ describe("Elasticsearch Index Migration @integration tests", () => {
   const manager = new IndexManager({ esClient, esConfig });
 
   beforeEach(() => {
-    sandbox.spy(esClient, "reindex");
-    sandbox.spy(esClient, "updateByQuery");
-    sandbox.spy(esClient.indices, "create");
-    sandbox.spy(esClient.indices, "delete");
-    sandbox.spy(esClient.indices, "putMapping");
-    sandbox.spy(esClient.indices, "putSettings");
-    sandbox.spy(esClient.indices, "updateAliases");
+    jest.spyOn(esClient, "reindex");
+    jest.spyOn(esClient, "updateByQuery");
+    jest.spyOn(esClient.indices, "create");
+    jest.spyOn(esClient.indices, "delete");
+    jest.spyOn(esClient.indices, "putMapping");
+    jest.spyOn(esClient.indices, "putSettings");
+    jest.spyOn(esClient.indices, "updateAliases");
   });
   afterEach(async () => {
     await manager.deleteIndex();
-    sandbox.restore();
+    jest.restoreAllMocks();
   });
 
   context("when aliased index does not exist", () => {
     beforeEach(async () => {
-      expect(await manager.existsIndex()).to.be.false;
-      expect(await manager.existsAlias()).to.be.false;
+      expect(await manager.existsIndex()).toBeFalsy();
+      expect(await manager.existsAlias()).toBeFalsy();
     });
     it("should create aliased index with settings and mappings", async () => {
       await manager.migrate();
 
-      expect(await manager.existsIndex()).to.be.true;
-      expect(await manager.existsAlias()).to.be.true;
-      expect(await manager.getSettings()).to.deep.include(esConfig.settings);
-      expect(await manager.getMappings()).to.deep.include(esConfig.mappings);
+      expect(await manager.existsIndex()).toBeTruthy();
+      expect(await manager.existsAlias()).toBeTruthy();
+      expect(await manager.getSettings()).toEqual(esConfig.settings);
+      expect(await manager.getMappings()).toEqual(esConfig.mappings);
     });
   });
 
@@ -75,61 +68,59 @@ describe("Elasticsearch Index Migration @integration tests", () => {
 
     context("when settings and mappings are still the same", () => {
       beforeEach(async () => {
-        expect(await manager.getSettings()).to.deep.include(esConfig.settings);
-        expect(await manager.getMappings()).to.deep.include(esConfig.mappings);
-        sandbox.resetHistory();
+        expect(await manager.getSettings()).toEqual(esConfig.settings);
+        expect(await manager.getMappings()).toEqual(esConfig.mappings);
+        jest.resetAllMocks();
       });
       it("should perform no maintenance", async () => {
         await manager.migrate();
 
-        expect(await manager.getVersion()).to.equal(initialVersion);
-        expect(esClient.reindex).to.not.have.been.called;
-        expect(esClient.updateByQuery).to.not.have.been.called;
-        expect(esClient.indices.create).to.not.have.been.called;
-        expect(esClient.indices.delete).to.not.have.been.called;
-        expect(esClient.indices.putMapping).to.not.have.been.called;
-        expect(esClient.indices.putSettings).to.not.have.been.called;
-        expect(esClient.indices.updateAliases).to.not.have.been.called;
+        expect(await manager.getVersion()).toEqual(initialVersion);
+        expect(esClient.reindex).not.toHaveBeenCalled();
+        expect(esClient.updateByQuery).not.toHaveBeenCalled();
+        expect(esClient.indices.create).not.toHaveBeenCalled();
+        expect(esClient.indices.delete).not.toHaveBeenCalled();
+        expect(esClient.indices.putMapping).not.toHaveBeenCalled();
+        expect(esClient.indices.putSettings).not.toHaveBeenCalled();
+        expect(esClient.indices.updateAliases).not.toHaveBeenCalled();
       });
     });
 
     context("when dynamic mappings have changed", () => {
-      const subSandbox = sinon.createSandbox();
-      beforeEach(() => {
-        subSandbox.replace(esConfig, "mappings", {
+      beforeEach((): void => {
+        esConfig.mappings = {
           properties: {
             ...esConfig.mappings.properties,
             code: { type: "text", fields: { keyword: { type: "keyword" } } },
           },
-        });
+        };
       });
       afterEach(() => {
-        subSandbox.restore();
+        jest.restoreAllMocks();
       });
       it("should update mappings without recreating index", async () => {
         await manager.migrate();
-        expect(await manager.getVersion()).to.equal(initialVersion);
-        expect(await manager.getSettings()).to.deep.include(esConfig.settings);
-        expect(await manager.getMappings()).to.deep.include(esConfig.mappings);
+        expect(await manager.getVersion()).toEqual(initialVersion);
+        expect(await manager.getSettings()).toEqual(esConfig.settings);
+        expect(await manager.getMappings()).toEqual(esConfig.mappings);
       });
     });
 
     context("when dynamic settings have changed", () => {
-      const subSandbox = sinon.createSandbox();
       beforeEach(() => {
-        subSandbox.replace(esConfig, "settings", {
+        esConfig.settings = {
           ...esConfig.settings,
           refresh_interval: "2ms",
-        });
+        };
       });
       afterEach(() => {
-        subSandbox.restore();
+        jest.resetAllMocks();
       });
       it("should update settings without recreating index", async () => {
         await manager.migrate();
-        expect(await manager.getVersion()).to.equal(initialVersion);
-        expect(await manager.getSettings()).to.deep.include(esConfig.settings);
-        expect(await manager.getMappings()).to.deep.include(esConfig.mappings);
+        expect(await manager.getVersion()).toEqual(initialVersion);
+        expect(await manager.getSettings()).toEqual(esConfig.settings);
+        expect(await manager.getMappings()).toEqual(esConfig.mappings);
       });
     });
   });

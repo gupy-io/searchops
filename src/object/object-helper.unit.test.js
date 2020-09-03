@@ -1,3 +1,4 @@
+const { describe, it, expect } = require("@jest/globals");
 const { removeUndefined, removeUndefinedOfItems } = require("./index");
 
 describe("helpers", () => {
@@ -23,7 +24,7 @@ describe("helpers", () => {
           key6: {},
         };
 
-        removeUndefined(input).should.be.deep.equal(expected);
+        expect(removeUndefined(input)).toEqual(expected);
       });
     });
 
@@ -70,7 +71,7 @@ describe("helpers", () => {
           },
         ];
 
-        removeUndefinedOfItems(input).should.be.deep.equal(expected);
+        expect(removeUndefinedOfItems(input)).toEqual(expected);
       });
     });
   });

@@ -1,4 +1,3 @@
-import { Suite } from "mocha";
 import { Document, SearchService } from "../service";
 import { IndexManager } from "../migration";
 interface TestDocument extends Document {
@@ -65,7 +64,7 @@ declare class Scenario {
     whenTheService(): ServiceSteps;
     thenTheDocument(): DocumentSteps;
     thenTheCount(): CountSteps;
-    build(): Suite;
+    build(): void;
 }
-export declare function scenario(description: string, definition: (_: Scenario) => void): Suite;
+export declare function scenario(description: string, definition: (_: Scenario) => void): void;
 export {};

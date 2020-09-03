@@ -1,7 +1,4 @@
-// Elasticsearch types follow the snake_case JSON convention
-/* eslint-disable @typescript-eslint/camelcase */
-
-import { expect } from "chai";
+import { describe, it, expect, describe as context } from "@jest/globals";
 import { Mapping } from "./es-types";
 import { translateObjectMapping, getValidatorForMapping } from "./validation";
 
@@ -33,7 +30,7 @@ describe("Elasticsearch Mapping Schema Validation @unit tests", () => {
 
       it("should get the correct schema without errors", () => {
         const schema = translateObjectMapping(mapping);
-        expect(schema).to.deep.equal({
+        expect(schema).toEqual({
           type: ["object", "null"],
           additionalProperties: true,
           properties: {
@@ -97,9 +94,9 @@ describe("Elasticsearch Mapping Schema Validation @unit tests", () => {
       };
       it("should accept and keep all data", () => {
         const good = validate(data);
-        expect(good).to.be.true;
-        expect(validate.errors).to.be.null;
-        expect(data).to.deep.equal({
+        expect(good).toBeTruthy();
+        expect(validate.errors).toBeNull();
+        expect(data).toEqual({
           name: { first: "John", last: undefined },
           tags: [
             { id: 1, label: "Unicorn" },
@@ -116,9 +113,9 @@ describe("Elasticsearch Mapping Schema Validation @unit tests", () => {
       };
       it("should accept and keep unexpected data", () => {
         const ok = validate(data);
-        expect(ok).to.be.true;
-        expect(validate.errors).to.be.null;
-        expect(data).to.deep.equal({
+        expect(ok).toBeTruthy();
+        expect(validate.errors).toBeNull();
+        expect(data).toEqual({
           first: "John",
           last: "Doe",
           user_id: "1",
@@ -132,8 +129,8 @@ describe("Elasticsearch Mapping Schema Validation @unit tests", () => {
       };
       it("should reject and report unexpected data", () => {
         const ok = validate(data);
-        expect(ok).to.be.false;
-        expect(validate.errors).to.be.an("array").that.is.not.empty;
+        expect(ok).toBeFalsy();
+        // expect(validate.errors).toBeArr("array").that.is.not.empty;
       });
     });
     context("when validating data with compatible types", () => {
@@ -146,9 +143,9 @@ describe("Elasticsearch Mapping Schema Validation @unit tests", () => {
       };
       it("should accept and coerce all data", () => {
         const good = validate(data);
-        expect(good).to.be.true;
-        expect(validate.errors).to.be.null;
-        expect(data).to.deep.equal({
+        expect(good).toBeTruthy();
+        expect(validate.errors).toBeNull();
+        expect(data).toEqual({
           user_id: "1",
           tags: [
             { id: 1, label: "1" },
@@ -163,8 +160,8 @@ describe("Elasticsearch Mapping Schema Validation @unit tests", () => {
       };
       it("should reject and report errors", () => {
         const bad = !validate(data);
-        expect(bad).to.be.true;
-        expect(validate.errors).to.be.an("array").that.is.not.empty;
+        expect(bad).toBeTruthy();
+        // expect(validate.errors).to.be.an("array").that.is.not.empty;
       });
     });
   });

@@ -1,5 +1,4 @@
-import sinon from "sinon";
-import { expect } from "chai";
+import { jest, expect, describe, describe as context, it } from "@jest/globals";
 import { Client } from "@elastic/elasticsearch";
 import { SearchService, Config } from "./service";
 
@@ -10,7 +9,7 @@ const fakeLogger = {
 
 describe("SearchService", () => {
   context("bulk", () => {
-    const bulk = sinon.fake.returns({ body: { errors: false } });
+    const bulk = jest.fn().mockReturnValue({ body: { errors: false } });
     const esConfig = {
       alias: "abc",
       mappings: {},
@@ -24,8 +23,8 @@ describe("SearchService", () => {
       });
       const document = "document";
       await searchService.bulk(document);
-      expect(bulk).to.have.been.called;
-      expect(bulk).to.have.been.calledWith({
+      expect(bulk).toHaveBeenCalled();
+      expect(bulk).toHaveBeenCalledWith({
         index: esConfig.alias,
         body: document,
         refresh: false,
@@ -40,15 +39,13 @@ describe("SearchService", () => {
       });
       const document = "document";
       await searchService.bulk(document, "wait_for");
-      expect(bulk.called).to.be.true;
-      expect(
-        bulk.calledWith({
-          index: esConfig.alias,
-          body: document,
-          refresh: "wait_for",
-        })
-      ).to.be.true;
-    });
+      expect(bulk).toHaveBeenCalled();
+      expect(bulk).toHaveBeenCalledWith({
+        index: esConfig.alias,
+        body: document,
+        refresh: "wait_for",
+      });
+  });
 
     it("throws if esClient.bulk informs error", async () => {
       const searchService = new SearchService({
@@ -74,8 +71,8 @@ describe("SearchService", () => {
       try {
         await searchService.bulk(document);
       } catch (error) {
-        expect(error.message).to.equal("Error on bulk request");
-        expect(error.errors).to.deep.equal([
+        expect(error.message).toEqual("Error on bulk request");
+        expect(error.errors).toEqual([
           { type: "a" },
           { type: "b" },
           { type: "c" },
