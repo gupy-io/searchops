@@ -14,7 +14,6 @@ export function getTestClient(): Client {
     node: `http://${elasticHost}:${elasticPort}`,
   });
   esClient.on("response", (error, result): void => {
-    // eslint-disable-next-line no-console
     if (error) console.log(JSON.stringify(result, null, 2));
   });
   return esClient;

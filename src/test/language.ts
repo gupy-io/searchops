@@ -1,12 +1,14 @@
-import { describe, test, expect, beforeAll, afterAll } from "@jest/globals";
+// plug Jest as testing framework
+import * as jestGlobals from "@jest/globals";
+const context = jestGlobals.describe;
+const exercise = jestGlobals.test;
+const before = jestGlobals.beforeAll;
+const after = jestGlobals.afterAll;
+const expect = jestGlobals.expect;
 
 import { Document, SearchService } from "../service";
 import { IndexManager } from "../migration";
 import * as utils from "./utils";
-
-// plug into jest
-const context = describe;
-const exercise = test;
 
 const fakeLogger = {
   error: () => ({}),
@@ -217,7 +219,7 @@ class Scenario {
 
   public build(): void {
     context(this.testWorld.context, () => {
-      this.testWorld.contextSetup.forEach((setUp) => beforeAll(setUp) as unknown);
+      this.testWorld.contextSetup.forEach((setUp) => before(setUp) as unknown);
       context(this.testWorld.exercise, () => {
         exercise(this.testWorld.expectation, async () => {
           await this.testWorld.exerciseRoutines.reduce(
@@ -228,13 +230,13 @@ class Scenario {
             expectation()
           );
         });
-        this.testWorld.contextTeardown.forEach((tearDown) => afterAll(tearDown) as unknown);
+        this.testWorld.contextTeardown.forEach((tearDown) => after(tearDown) as unknown);
       });
     });
   }
 }
 
-export function scenario(
+function test(
   description: string,
   definition: (_: Scenario) => void
 ): void {
@@ -244,3 +246,5 @@ export function scenario(
     return _.build();
   });
 }
+
+export { context, test };

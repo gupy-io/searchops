@@ -1,22 +1,21 @@
-import { describe } from "@jest/globals";
-import { scenario as context } from "./test/language";
+import { context, test } from "./test/language";
 
-describe("SearchService @integration", () => {
-  context("Creating new documents", (_) => {
+context("SearchService @integration", () => {
+  test("Creating new documents", (_) => {
     _.givenTheIndex().wasCreated();
     _.givenTheDocument().containing({ title: "Dr Who" });
     _.whenTheService().requestsToIndex().retrievesTheDocument();
     _.thenTheDocument().shouldContain({ title: "Dr Who" });
   });
 
-  context("Changing nothing", (_) => {
+  test("Changing nothing", (_) => {
     _.givenTheIndex().wasCreated();
     _.givenTheDocument().containing({ title: "Pokémon" }).wasCreated();
     _.whenTheService().requestsToIndex({}).retrievesTheDocument();
     _.thenTheDocument().shouldContain({ title: "Pokémon" });
   });
 
-  context("Creating new fields", (_) => {
+  test("Creating new fields", (_) => {
     _.givenTheIndex().wasCreated();
     _.givenTheDocument().containing({ title: "Pokémon" }).wasCreated();
     _.whenTheService()
@@ -28,7 +27,7 @@ describe("SearchService @integration", () => {
     });
   });
 
-  context("Creating new deeply nested fields", (_) => {
+  test("Creating new deeply nested fields", (_) => {
     _.givenTheIndex().wasCreated();
     _.givenTheDocument()
       .containing({ author: { address: { street: "Sesame" } } })
@@ -49,7 +48,7 @@ describe("SearchService @integration", () => {
     });
   });
 
-  context("Updating old fields", (_) => {
+  test("Updating old fields", (_) => {
     _.givenTheIndex().wasCreated();
     _.givenTheDocument()
       .containing({ title: "Pokémon", subtitle: "Green Version" })
@@ -63,7 +62,7 @@ describe("SearchService @integration", () => {
     });
   });
 
-  context("Updating old deeply nested fields", (_) => {
+  test("Updating old deeply nested fields", (_) => {
     _.givenTheIndex().wasCreated();
     _.givenTheDocument()
       .containing({
@@ -89,7 +88,7 @@ describe("SearchService @integration", () => {
     });
   });
 
-  context("Counting documents", (_) => {
+  test("Counting documents", (_) => {
     _.givenTheIndex().wasCreated();
     _.givenTheDocument().containing({ title: "Digimón" }).wasCreated();
     _.whenTheService().requestCount();
