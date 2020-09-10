@@ -1,3 +1,4 @@
+declare const context: import("@jest/types/build/Global").Describe;
 import { Document, SearchService } from "../service";
 import { IndexManager } from "../migration";
 interface TestDocument extends Document {
@@ -66,5 +67,5 @@ declare class Scenario {
     thenTheCount(): CountSteps;
     build(): void;
 }
-export declare function scenario(description: string, definition: (_: Scenario) => void): void;
-export {};
+declare function test(description: string, definition: (_: Scenario) => void): void;
+export { context, test };

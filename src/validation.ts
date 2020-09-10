@@ -20,7 +20,10 @@ const esTypeMap = new Map([
   ["text", ["string"]],
 ]);
 
-function translateField([field, mapping]: [string, Mapping]): Record<string, unknown> {
+function translateField([field, mapping]: [string, Mapping]): Record<
+  string,
+  unknown
+> {
   switch (mapping.type) {
     case undefined:
     case "object":
@@ -34,7 +37,9 @@ function translateField([field, mapping]: [string, Mapping]): Record<string, unk
   }
 }
 
-function translateNestedMapping(mapping: NestedMapping): Record<string, unknown> {
+function translateNestedMapping(
+  mapping: NestedMapping
+): Record<string, unknown> {
   if (!mapping.properties) {
     return { type: ["array", "null"] };
   }
@@ -50,16 +55,18 @@ function translateNestedMapping(mapping: NestedMapping): Record<string, unknown>
   };
 }
 
-export function translateObjectMapping(mapping: ObjectMapping): Record<string, unknown> {
+export function translateObjectMapping(
+  mapping: ObjectMapping
+): Record<string, unknown> {
   return {
     type: ["object", "null"],
     additionalProperties: mapping.dynamic !== "strict",
     properties:
       mapping.properties &&
-      Object.assign(
+      (Object.assign(
         {},
         ...Object.entries(mapping.properties).map(translateField)
-      ) as Record<string, unknown>,
+      ) as Record<string, unknown>),
   };
 }
 

@@ -232,18 +232,17 @@ class Scenario {
             expectation()
           );
         });
-        // TODO: remove when jest>26.4.2 lands
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        this.testWorld.contextTeardown.forEach((tearDown) => after(tearDown) as unknown);
+        this.testWorld.contextTeardown.forEach(
+          // TODO: remove when jest>26.4.2 lands
+          // eslint-disable-next-line @typescript-eslint/no-misused-promises
+          (tearDown) => after(tearDown) as unknown
+        );
       });
     });
   }
 }
 
-function test(
-  description: string,
-  definition: (_: Scenario) => void
-): void {
+function test(description: string, definition: (_: Scenario) => void): void {
   return context(description, () => {
     const _ = new Scenario();
     definition(_);

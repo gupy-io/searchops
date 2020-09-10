@@ -45,7 +45,7 @@ describe("SearchService", () => {
         body: document,
         refresh: "wait_for",
       });
-  });
+    });
 
     it("throws if esClient.bulk informs error", async () => {
       const searchService = new SearchService({

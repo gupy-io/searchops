@@ -1,4 +1,11 @@
-import { jest, expect, describe, describe as context, it, beforeEach, afterEach } from "@jest/globals";
+import {
+  jest,
+  expect,
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+} from "@jest/globals";
 import faker from "faker";
 
 import { getTestClient } from "./test/utils";
@@ -38,7 +45,7 @@ describe("Elasticsearch Index Migration @integration tests", () => {
     jest.restoreAllMocks();
   });
 
-  context("when aliased index does not exist", () => {
+  describe("when aliased index does not exist", () => {
     beforeEach(async () => {
       expect(await manager.existsIndex()).toBeFalsy();
       expect(await manager.existsAlias()).toBeFalsy();
@@ -53,7 +60,7 @@ describe("Elasticsearch Index Migration @integration tests", () => {
     });
   });
 
-  context("when aliased index already exists", () => {
+  describe("when aliased index already exists", () => {
     let initialVersion: string;
 
     beforeEach(async () => {
@@ -66,7 +73,7 @@ describe("Elasticsearch Index Migration @integration tests", () => {
       });
     });
 
-    context("when settings and mappings are still the same", () => {
+    describe("when settings and mappings are still the same", () => {
       beforeEach(async () => {
         expect(await manager.getSettings()).toEqual(esConfig.settings);
         expect(await manager.getMappings()).toEqual(esConfig.mappings);
@@ -86,7 +93,7 @@ describe("Elasticsearch Index Migration @integration tests", () => {
       });
     });
 
-    context("when dynamic mappings have changed", () => {
+    describe("when dynamic mappings have changed", () => {
       beforeEach((): void => {
         esConfig.mappings = {
           properties: {
@@ -106,7 +113,7 @@ describe("Elasticsearch Index Migration @integration tests", () => {
       });
     });
 
-    context("when dynamic settings have changed", () => {
+    describe("when dynamic settings have changed", () => {
       beforeEach(() => {
         esConfig.settings = {
           ...esConfig.settings,
