@@ -70,8 +70,15 @@ export function translateObjectMapping(
   };
 }
 
+interface SyncValidationFunction extends AJV.ValidateFunction {
+  (data: any): boolean;
+  $async?: undefined;
+}
+
 export function getValidatorForMapping(
   mappings: ObjectMapping
-): AJV.ValidateFunction {
-  return ajv.compile(translateObjectMapping(mappings));
+): SyncValidationFunction {
+  return ajv.compile(
+    translateObjectMapping(mappings)
+  ) as SyncValidationFunction;
 }
