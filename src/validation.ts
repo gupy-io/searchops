@@ -20,14 +20,12 @@ const esTypeMap = new Map([
   ["text", ["string"]],
 ]);
 
-function translateField([field, mapping]: [string, Mapping]): object {
+function translateField([field, mapping]: [string, Mapping]): Record<string, unknown> {
   switch (mapping.type) {
     case undefined:
     case "object":
-      // eslint-disable-next-line @typescript-eslint/no-use-before-define
       return { [field]: translateObjectMapping(mapping) };
     case "nested":
-      // eslint-disable-next-line @typescript-eslint/no-use-before-define
       return { [field]: translateNestedMapping(mapping) };
     default:
       return {
@@ -36,7 +34,7 @@ function translateField([field, mapping]: [string, Mapping]): object {
   }
 }
 
-function translateNestedMapping(mapping: NestedMapping): object {
+function translateNestedMapping(mapping: NestedMapping): Record<string, unknown> {
   if (!mapping.properties) {
     return { type: ["array", "null"] };
   }
@@ -47,12 +45,12 @@ function translateNestedMapping(mapping: NestedMapping): object {
       properties: Object.assign(
         {},
         ...Object.entries(mapping.properties).map(translateField)
-      ),
+      ) as Record<string, unknown>,
     },
   };
 }
 
-export function translateObjectMapping(mapping: ObjectMapping): object {
+export function translateObjectMapping(mapping: ObjectMapping): Record<string, unknown> {
   return {
     type: ["object", "null"],
     additionalProperties: mapping.dynamic !== "strict",
@@ -61,7 +59,7 @@ export function translateObjectMapping(mapping: ObjectMapping): object {
       Object.assign(
         {},
         ...Object.entries(mapping.properties).map(translateField)
-      ),
+      ) as Record<string, unknown>,
   };
 }
 

@@ -219,6 +219,8 @@ class Scenario {
 
   public build(): void {
     context(this.testWorld.context, () => {
+      // TODO: remove when jest>26.4.2 lands
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       this.testWorld.contextSetup.forEach((setUp) => before(setUp) as unknown);
       context(this.testWorld.exercise, () => {
         exercise(this.testWorld.expectation, async () => {
@@ -230,6 +232,8 @@ class Scenario {
             expectation()
           );
         });
+        // TODO: remove when jest>26.4.2 lands
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.testWorld.contextTeardown.forEach((tearDown) => after(tearDown) as unknown);
       });
     });
