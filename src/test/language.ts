@@ -106,11 +106,10 @@ class DocumentSteps {
   public shouldContain(parts: Partial<TestDocument>): DocumentSteps {
     this.testWorld.expectation += " should contain the specified parts";
     this.testWorld.expectationChecks.push(() => {
-      const intersection = utils.collectDeepMembers(
-        this.testWorld.document,
-        parts
+      // eslint-disable-next-line
+      (expect(this.testWorld.document) as any).toContainEntries(
+        Object.entries(parts)
       );
-      expect(intersection).toEqual(parts);
     });
     return this;
   }

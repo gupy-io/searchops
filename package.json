@@ -58,6 +58,7 @@
     "preset": "ts-jest",
     "roots": [
       "./src"
-    ]
+    ],
+    "setupFilesAfterEnv": ["jest-extended"]
   }
 }

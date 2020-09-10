@@ -33,13 +33,6 @@ export function getRandomConfig(): Config {
   };
 }
 
-export function collectDeepMembers(object: any, structure: any): object {
-  if (typeof structure !== "object") return object;
-  return Object.keys(structure).reduce(
-    (sub, key) => ({
-      ...sub,
-      [key]: collectDeepMembers(object[key], structure[key]),
-    }),
-    {}
-  );
-}
+export type RecursivePartial<T> = {
+  [P in keyof T]?: RecursivePartial<T[P]>;
+};

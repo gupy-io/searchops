@@ -71,7 +71,7 @@ export function translateObjectMapping(
 }
 
 interface SyncValidationFunction extends AJV.ValidateFunction {
-  (data: any): boolean;
+  (data: Record<string, unknown>): boolean;
   $async?: undefined;
 }
 
