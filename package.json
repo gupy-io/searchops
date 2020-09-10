@@ -49,16 +49,14 @@
     "typescript": "^4.0.2"
   },
   "jest": {
-    "verbose": true,
     "collectCoverage": true,
     "collectCoverageFrom": [
       "./src/**/*.{js,ts}"
     ],
     "errorOnDeprecated": true,
     "preset": "ts-jest",
-    "roots": [
-      "./src"
-    ],
-    "setupFilesAfterEnv": ["jest-extended"]
+    "roots": ["./src"],
+    "setupFilesAfterEnv": ["jest-extended"],
+    "verbose": true
   }
 }
