@@ -1,4 +1,4 @@
-import { describe, beforeAll, afterAll } from "@jest/globals";
+import { describe, test, beforeAll, afterAll } from "@jest/globals";
 import { Document, SearchService } from "../service";
 import { IndexManager } from "../migration";
 import * as utils from "./utils";

@@ -60,6 +60,7 @@
     "setupFilesAfterEnv": [
       "jest-extended"
     ],
+    "testEnvironment": "node",
     "verbose": true
   }
 }
