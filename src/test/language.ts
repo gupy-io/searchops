@@ -1,11 +1,4 @@
-// plug Jest as testing framework
-import * as jestGlobals from "@jest/globals";
-const context = jestGlobals.describe;
-const exercise = jestGlobals.test;
-const before = jestGlobals.beforeAll;
-const after = jestGlobals.afterAll;
-const expect = jestGlobals.expect;
-
+import { describe, beforeAll, afterAll } from "@jest/globals";
 import { Document, SearchService } from "../service";
 import { IndexManager } from "../migration";
 import * as utils from "./utils";
@@ -106,8 +99,7 @@ class DocumentSteps {
   public shouldContain(parts: Partial<TestDocument>): DocumentSteps {
     this.testWorld.expectation += " should contain the specified parts";
     this.testWorld.expectationChecks.push(() => {
-      // eslint-disable-next-line
-      (expect(this.testWorld.document) as any).toContainEntries(
+      expect(this.testWorld.document).toContainEntries<Record<string, unknown>>(
         Object.entries(parts)
       );
     });
@@ -217,12 +209,14 @@ class Scenario {
   }
 
   public build(): void {
-    context(this.testWorld.context, () => {
-      // TODO: remove when jest>26.4.2 lands
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      this.testWorld.contextSetup.forEach((setUp) => before(setUp) as unknown);
-      context(this.testWorld.exercise, () => {
-        exercise(this.testWorld.expectation, async () => {
+    describe(this.testWorld.context, () => {
+      this.testWorld.contextSetup.forEach(
+        // TODO: remove when jest>26.4.2 lands
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
+        (setUp) => beforeAll(setUp)
+      );
+      describe(this.testWorld.exercise, () => {
+        test(this.testWorld.expectation, async () => {
           await this.testWorld.exerciseRoutines.reduce(
             (chain, routine) => chain.then(routine),
             Promise.resolve()
@@ -234,19 +228,20 @@ class Scenario {
         this.testWorld.contextTeardown.forEach(
           // TODO: remove when jest>26.4.2 lands
           // eslint-disable-next-line @typescript-eslint/no-misused-promises
-          (tearDown) => after(tearDown) as unknown
+          (tearDown) => afterAll(tearDown)
         );
       });
     });
   }
 }
 
-function test(description: string, definition: (_: Scenario) => void): void {
-  return context(description, () => {
+function testz(description: string, definition: (_: Scenario) => void): void {
+  return describe(description, () => {
     const _ = new Scenario();
     definition(_);
     return _.build();
   });
 }
 
-export { context, test };
+export { describe as context } from "@jest/globals";
+export { testz as test };
