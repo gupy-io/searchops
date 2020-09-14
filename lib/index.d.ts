@@ -1,3 +1,4 @@
+import type { Logger } from "winston";
 import { Client, RequestParams } from "@elastic/elasticsearch";
 import { Document, Params, Result, Provider } from "./service";
 import { Mappings, Settings } from "./es-types";
@@ -16,11 +17,11 @@ export declare class SearchEngine<E, D extends Document> implements Provider<D> 
         settings?: Settings;
         mappings?: Mappings;
         serialize: (entity: E) => D;
-        logger: any;
+        logger: Logger;
     });
     getQueryBuilder(): QueryBuilder<D>;
     getIndexManager(triggerUpdate?: boolean): IndexManager;
-    bulk(body: any, refresh: "wait_for" | false): Promise<void>;
+    bulk(body: Record<string, unknown>[], refresh: "wait_for" | false): Promise<void>;
     index(entity: E): Promise<void>;
     delete(docId: Document["id"], routing?: string): Promise<void>;
     search(params: Params): Promise<Result<D>>;

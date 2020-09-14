@@ -91,7 +91,8 @@ export class IndexManager {
   ): Promise<string> {
     const {
       body: { [index]: config },
-    } = await this.esClient.indices.getSettings<any>({ index });
+    } = await this.esClient.indices.getSettings({ index });
+    // eslint-disable-next-line
     return config.settings.index.version.created;
   }
 
@@ -100,9 +101,11 @@ export class IndexManager {
   ): Promise<Settings> {
     const {
       body: { [index]: config },
-    } = await this.esClient.indices.getSettings<any>({ index });
+    } = await this.esClient.indices.getSettings({ index });
     const autoSettings = ["provided_name", "creation_date", "uuid", "version"];
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     autoSettings.forEach((key) => delete config.settings.index[key]);
+    // eslint-disable-next-line
     return config.settings.index;
   }
 
@@ -121,10 +124,11 @@ export class IndexManager {
   ): Promise<Mappings> {
     const {
       body: { [index]: config },
-    } = await this.esClient.indices.getMapping<any>({
+    } = await this.esClient.indices.getMapping({
       index,
       include_type_name: false,
     });
+    // eslint-disable-next-line
     return config.mappings;
   }
 

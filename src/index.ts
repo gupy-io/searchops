@@ -1,3 +1,4 @@
+import type { Logger } from "winston";
 import { Client, RequestParams } from "@elastic/elasticsearch";
 
 import {
@@ -35,7 +36,7 @@ export class SearchEngine<E, D extends Document> implements Provider<D> {
     settings?: Settings;
     mappings?: Mappings;
     serialize: (entity: E) => D;
-    logger: any;
+    logger: Logger;
   }) {
     const actualPrefix = namespace ? `${namespace}_` : "";
     const esConfig = {
@@ -64,7 +65,10 @@ export class SearchEngine<E, D extends Document> implements Provider<D> {
     });
   }
 
-  public async bulk(body: any, refresh: "wait_for" | false): Promise<void> {
+  public async bulk(
+    body: Record<string, unknown>[],
+    refresh: "wait_for" | false
+  ): Promise<void> {
     await this.searchService.bulk(body, refresh);
   }
 

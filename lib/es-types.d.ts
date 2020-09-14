@@ -20,7 +20,7 @@ export interface Query {
     match_phrase_prefix?: MatchPhrasePrefixQuery;
 }
 export interface BoolQuery {
-    should?: Query | Query[] | any;
+    should?: Query | Query[];
     filter?: Query | Query[];
     must?: Query | Query[];
     must_not?: Query | Query[];

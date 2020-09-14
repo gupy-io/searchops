@@ -25,7 +25,7 @@ export interface Query {
 }
 
 export interface BoolQuery {
-  should?: Query | Query[] | any; // TODO: remove any after Chai.Assertion start behaving
+  should?: Query | Query[];
   filter?: Query | Query[];
   must?: Query | Query[];
   must_not?: Query | Query[];
