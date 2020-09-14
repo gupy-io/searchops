@@ -111,7 +111,7 @@ export class IndexManager {
     settings: Settings = this.esConfig.settings
   ): Promise<void> {
     const settigsToPatch = deepPatch(await this.getSettings(index), settings);
-    if (settigsToPatch) {
+    if (settigsToPatch instanceof Object) {
       await this.esClient.indices.putSettings({ index, body: settigsToPatch });
     }
   }

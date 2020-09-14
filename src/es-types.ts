@@ -192,5 +192,5 @@ export type MappingAnalyzer = "english" | "spanish" | "portuguese" | string; // 
 // #endregion
 
 // #region Settings
-export type Settings = object;
+export type Settings = Record<string, unknown>;
 // #endregion
