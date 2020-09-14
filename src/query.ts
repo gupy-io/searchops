@@ -34,7 +34,11 @@ export class QueryBuilder<D extends Document> {
 
   public withFilter(field: string, terms: (string | null)[]): QueryBuilder<D> {
     const filter: Query[] = [
-      { terms: { [field]: terms.filter((s) => !!s).map((s) => `${s}`) } },
+      {
+        terms: {
+          [field]: terms.filter((s): s is string => !!s).map((s) => `${s}`),
+        },
+      },
     ];
     if (terms.includes(null)) {
       filter.push({ bool: { must_not: { exists: { field } } } });
@@ -72,7 +76,11 @@ export class QueryBuilder<D extends Document> {
 
   public withGrants(field: string, terms: (string | null)[]): QueryBuilder<D> {
     const grants: Query[] = [
-      { terms: { [field]: terms.filter((s) => !!s).map((s) => `${s}`) } },
+      {
+        terms: {
+          [field]: terms.filter((s): s is string => !!s).map((s) => `${s}`),
+        },
+      },
     ];
     if (terms.includes(null)) {
       grants.push({ bool: { must_not: { exists: { field } } } });
