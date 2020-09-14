@@ -1,10 +1,10 @@
-name: TSC
+name: Jest
 
 on: [push]
 
 jobs:
 
-  build:
+  test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -12,9 +12,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - run: docker-compose up -d
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node }}
       - run: npm install
-      - run: npm run build
-      - run: if [ -n "$(git status --porcelain)" ]; then exit 1; fi
+      - run: npm run test
