@@ -19,7 +19,7 @@ describe("SearchService", () => {
         esConfig: (esConfig as unknown) as Config,
         logger,
       });
-      const document = "document";
+      const document = [{}];
       await searchService.bulk(document);
       expect(bulk).toHaveBeenCalled();
       expect(bulk).toHaveBeenCalledWith({
@@ -35,7 +35,7 @@ describe("SearchService", () => {
         esConfig: (esConfig as unknown) as Config,
         logger,
       });
-      const document = "document";
+      const document = [{}];
       await searchService.bulk(document, "wait_for");
       expect(bulk).toHaveBeenCalled();
       expect(bulk).toHaveBeenCalledWith({
@@ -65,7 +65,7 @@ describe("SearchService", () => {
         esConfig: (esConfig as unknown) as Config,
         logger,
       });
-      const document = "document";
+      const document = [{}];
       try {
         await searchService.bulk(document);
       } catch (e: unknown) {

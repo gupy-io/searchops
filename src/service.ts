@@ -42,9 +42,9 @@ export interface Result<T> {
 }
 
 export class ValidationError extends Error {
-  public context: object;
+  public context: unknown;
 
-  public constructor(message: string, context: object) {
+  public constructor(message: string, context: unknown) {
     super(message);
     this.context = context;
   }
@@ -84,7 +84,9 @@ export class SearchService<D extends Document> implements Provider<D> {
     this.logger = logger;
   }
 
-  private getAction(item: any): any {
+  private getAction(
+    item: Record<string, Record<string, unknown>>
+  ): Record<string, unknown> {
     if (item.create) {
       return item.create;
     }
@@ -101,7 +103,7 @@ export class SearchService<D extends Document> implements Provider<D> {
   }
 
   public async bulk(
-    body: any,
+    body: Record<string, unknown>[],
     refresh: "wait_for" | false = false
   ): Promise<void> {
     const response = await this.esClient.bulk({
@@ -110,8 +112,11 @@ export class SearchService<D extends Document> implements Provider<D> {
       refresh,
     });
     if (response.body.errors) {
+      // eslint-disable-next-line
       const errors = response.body.items
+        // eslint-disable-next-line
         .filter((item: any) => !!this.getAction(item).error)
+        // eslint-disable-next-line
         .map((item: any) => this.getAction(item).error);
       // This logger is temporary and will be removed soon
       this.logger.error("Error on bulk request (complete log)", response.body);
@@ -120,11 +125,11 @@ export class SearchService<D extends Document> implements Provider<D> {
   }
 
   public async get(id: D["id"]): Promise<D> {
-    const response: ApiResponse<any> = await this.esClient.get({
+    const response = await this.esClient.get({
       id,
       index: this.esConfig.alias,
     });
-    return response.body._source;
+    return response.body._source as D;
   }
 
   public async index(
@@ -250,9 +255,13 @@ export class SearchService<D extends Document> implements Provider<D> {
         type: this.esConfig.dtype,
         body,
       } as RequestParams.Count);
-      return response.body.count;
+      return response.body.count as number;
     } catch (error) {
-      if (error.message === "search_phase_execution_exception") return 0;
+      if (
+        error instanceof Error &&
+        error.message === "search_phase_execution_exception"
+      )
+        return 0;
       throw error;
     }
   }

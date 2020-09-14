@@ -33,8 +33,8 @@ export interface Result<T> {
     };
 }
 export declare class ValidationError extends Error {
-    context: object;
-    constructor(message: string, context: object);
+    context: unknown;
+    constructor(message: string, context: unknown);
 }
 export declare class BulkError extends Error {
     errors: unknown[];
@@ -54,7 +54,7 @@ export declare class SearchService<D extends Document> implements Provider<D> {
         logger: Logger;
     });
     private getAction;
-    bulk(body: any, refresh?: "wait_for" | false): Promise<void>;
+    bulk(body: Record<string, unknown>[], refresh?: "wait_for" | false): Promise<void>;
     get(id: D["id"]): Promise<D>;
     index(doc: D, refresh?: "wait_for" | "false"): Promise<void>;
     delete(docId: Document["id"], routing?: string): Promise<void>;
