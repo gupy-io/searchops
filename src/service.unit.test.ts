@@ -1,6 +1,6 @@
 import { jest, expect, describe, describe as context, it } from "@jest/globals";
 import { Client } from "@elastic/elasticsearch";
-import { SearchService, Config } from "./service";
+import { SearchService, Config, BulkError } from "./service";
 
 const fakeLogger = {
   // eslint-disable-next-line no-console
@@ -70,14 +70,17 @@ describe("SearchService", () => {
       const document = "document";
       try {
         await searchService.bulk(document);
-      } catch (error) {
-        expect(error.message).toEqual("Error on bulk request");
-        expect(error.errors).toEqual([
-          { type: "a" },
-          { type: "b" },
-          { type: "c" },
-          { type: "d" },
-        ]);
+      } catch (e: unknown) {
+        expect(e).toBeInstanceOf(BulkError);
+        if (e instanceof BulkError) {
+          expect(e.message).toEqual("Error on bulk request");
+          expect(e.errors).toEqual([
+            { type: "a" },
+            { type: "b" },
+            { type: "c" },
+            { type: "d" },
+          ]);
+        }
       }
     });
   });
