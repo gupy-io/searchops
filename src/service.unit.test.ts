@@ -1,11 +1,9 @@
 import { jest, expect, describe, describe as context, it } from "@jest/globals";
+import { createLogger } from "winston";
 import { Client } from "@elastic/elasticsearch";
 import { SearchService, Config, BulkError } from "./service";
 
-const fakeLogger = {
-  // eslint-disable-next-line no-console
-  error: console.log,
-};
+const logger = createLogger({ silent: true });
 
 describe("SearchService", () => {
   context("bulk", () => {
@@ -19,7 +17,7 @@ describe("SearchService", () => {
       const searchService = new SearchService({
         esClient: ({ bulk } as unknown) as Client,
         esConfig: (esConfig as unknown) as Config,
-        logger: fakeLogger,
+        logger,
       });
       const document = "document";
       await searchService.bulk(document);
@@ -35,7 +33,7 @@ describe("SearchService", () => {
       const searchService = new SearchService({
         esClient: ({ bulk } as unknown) as Client,
         esConfig: (esConfig as unknown) as Config,
-        logger: fakeLogger,
+        logger,
       });
       const document = "document";
       await searchService.bulk(document, "wait_for");
@@ -65,7 +63,7 @@ describe("SearchService", () => {
           }),
         } as unknown) as Client,
         esConfig: (esConfig as unknown) as Config,
-        logger: fakeLogger,
+        logger,
       });
       const document = "document";
       try {

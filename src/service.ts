@@ -1,3 +1,4 @@
+import type { Logger } from "winston";
 import { Client, RequestParams, ApiResponse } from "@elastic/elasticsearch";
 import AJV from "ajv";
 import {
@@ -37,7 +38,7 @@ export interface Params {
 export interface Result<T> {
   summary: { total: number };
   results: T[];
-  buckets: { [key: string]: any };
+  buckets: { [key: string]: unknown };
 }
 
 export class ValidationError extends Error {
@@ -50,9 +51,9 @@ export class ValidationError extends Error {
 }
 
 export class BulkError extends Error {
-  public errors: object[];
+  public errors: unknown[];
 
-  public constructor(message: string, errors: object[]) {
+  public constructor(message: string, errors: unknown[]) {
     super(message);
     this.errors = errors;
   }
@@ -66,7 +67,7 @@ export class SearchService<D extends Document> implements Provider<D> {
   private esClient: Client;
   private esConfig: Config;
   private validate: AJV.ValidateFunction;
-  private logger: any;
+  private logger: Logger;
 
   public constructor({
     esClient,
@@ -75,7 +76,7 @@ export class SearchService<D extends Document> implements Provider<D> {
   }: {
     esClient: Client;
     esConfig: Config;
-    logger: any;
+    logger: Logger;
   }) {
     this.esClient = esClient;
     this.esConfig = esConfig;

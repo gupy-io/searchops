@@ -1,11 +1,10 @@
 import { describe, test, beforeAll, afterAll } from "@jest/globals";
+import { createLogger } from "winston";
 import { Document, SearchService } from "../service";
 import { IndexManager } from "../migration";
 import * as utils from "./utils";
 
-const fakeLogger = {
-  error: () => ({}),
-};
+const logger = createLogger({ silent: true });
 
 interface TestDocument extends Document {
   id: string;
@@ -164,7 +163,7 @@ class Scenario {
       searchService: new SearchService({
         esClient,
         esConfig,
-        logger: fakeLogger,
+        logger: logger,
       }),
       indexManager: new IndexManager({ esClient, esConfig }),
       document: { id: utils.getRandomSnakeCase() },

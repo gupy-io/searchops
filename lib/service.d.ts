@@ -1,3 +1,4 @@
+import type { Logger } from "winston";
 import { Client, RequestParams } from "@elastic/elasticsearch";
 import { Settings, Mappings, Query, Sort, Aggregations } from "./es-types";
 export interface Document {
@@ -28,7 +29,7 @@ export interface Result<T> {
     };
     results: T[];
     buckets: {
-        [key: string]: any;
+        [key: string]: unknown;
     };
 }
 export declare class ValidationError extends Error {
@@ -36,8 +37,8 @@ export declare class ValidationError extends Error {
     constructor(message: string, context: object);
 }
 export declare class BulkError extends Error {
-    errors: object[];
-    constructor(message: string, errors: object[]);
+    errors: unknown[];
+    constructor(message: string, errors: unknown[]);
 }
 export interface Provider<D extends Document> {
     search(params: Params): Promise<Result<D>>;
@@ -50,7 +51,7 @@ export declare class SearchService<D extends Document> implements Provider<D> {
     constructor({ esClient, esConfig, logger, }: {
         esClient: Client;
         esConfig: Config;
-        logger: any;
+        logger: Logger;
     });
     private getAction;
     bulk(body: any, refresh?: "wait_for" | false): Promise<void>;
