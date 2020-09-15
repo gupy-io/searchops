@@ -6,15 +6,12 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node: [ '10', '12', '14' ]
 
     steps:
       - uses: actions/checkout@v2
       - run: docker-compose up -d
       - uses: actions/setup-node@v1
         with:
-          node-version: ${{ matrix.node }}
+          node-version: 14
       - run: npm install
       - run: npm run test
