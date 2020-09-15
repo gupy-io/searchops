@@ -29,7 +29,7 @@
   "dependencies": {
     "@elastic/elasticsearch": "^7.9.0",
     "ajv": "^6.12.5",
-    "aws-sdk": "^2.751.0",
+    "aws-sdk": "^2.752.0",
     "winston": "^3.3.3"
   },
   "devDependencies": {
