@@ -192,5 +192,22 @@ export type MappingAnalyzer = "english" | "spanish" | "portuguese" | string; // 
 // #endregion
 
 // #region Settings
-export type Settings = Record<string, unknown>;
+export interface Settings {
+  [key: string]: unknown;
+}
+
+export interface ConcreteIndexSettings extends Settings {
+  index: {
+    uuid: string;
+    provided_name: string;
+    creation_date: string;
+    version: {
+      created: string;
+    };
+  };
+}
+
+export interface GetSettingsResponse {
+  [key: string]: { settings: ConcreteIndexSettings };
+}
 // #endregion

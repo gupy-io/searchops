@@ -1,7 +1,7 @@
 import { Client } from "@elastic/elasticsearch";
+import { GetSettingsResponse, Settings, Mappings } from "./es-types";
 
 import { Config } from "./service";
-import { Settings, Mappings } from "./es-types";
 import { deepEqual, deepPatch } from "./object/deep";
 
 export class IndexManager {
@@ -90,23 +90,33 @@ export class IndexManager {
     index: string = this.esConfig.index
   ): Promise<string> {
     const {
-      body: { [index]: config },
-    } = await this.esClient.indices.getSettings({ index });
-    // eslint-disable-next-line
-    return config.settings.index.version.created;
+      body: {
+        [index]: {
+          settings: { index: settings },
+        },
+      },
+    } = await this.esClient.indices.getSettings<GetSettingsResponse>({ index });
+    return settings.version.created;
   }
 
   public async getSettings(
     index: string = this.esConfig.index
   ): Promise<Settings> {
     const {
-      body: { [index]: config },
-    } = await this.esClient.indices.getSettings({ index });
-    const autoSettings = ["provided_name", "creation_date", "uuid", "version"];
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    autoSettings.forEach((key) => delete config.settings.index[key]);
-    // eslint-disable-next-line
-    return config.settings.index;
+      body: {
+        [index]: {
+          settings: { index: settings },
+        },
+      },
+    } = await this.esClient.indices.getSettings<GetSettingsResponse>({ index });
+    const readonlySettings: (keyof typeof settings)[] = [
+      "uuid",
+      "provided_name",
+      "creation_date",
+      "version",
+    ];
+    readonlySettings.forEach((key) => delete settings[key]);
+    return settings;
   }
 
   public async putSettings(

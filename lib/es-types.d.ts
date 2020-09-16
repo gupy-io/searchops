@@ -138,5 +138,22 @@ export interface TextMapping {
 }
 export declare type SimpleType = "long" | "integer" | "short" | "byte" | "double" | "float" | "half_float" | "scaled_float" | "date" | "date_nanos" | "binary" | "integer_range" | "float_range" | "long_range" | "double_range" | "date_range" | "geo_point" | "geo_shape";
 export declare type MappingAnalyzer = "english" | "spanish" | "portuguese" | string;
-export declare type Settings = Record<string, unknown>;
+export interface Settings {
+    [key: string]: unknown;
+}
+export interface ConcreteIndexSettings extends Settings {
+    index: {
+        uuid: string;
+        provided_name: string;
+        creation_date: string;
+        version: {
+            created: string;
+        };
+    };
+}
+export interface GetSettingsResponse {
+    [key: string]: {
+        settings: ConcreteIndexSettings;
+    };
+}
 export {};

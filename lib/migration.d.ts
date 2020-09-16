@@ -1,6 +1,6 @@
 import { Client } from "@elastic/elasticsearch";
-import { Config } from "./service";
 import { Settings, Mappings } from "./es-types";
+import { Config } from "./service";
 export declare class IndexManager {
     private esClient;
     private esConfig;
