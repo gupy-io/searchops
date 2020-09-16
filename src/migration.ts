@@ -1,5 +1,10 @@
 import { Client } from "@elastic/elasticsearch";
-import { GetSettingsResponse, Settings, Mappings } from "./es-types";
+import {
+  Settings,
+  GetSettingsResponse,
+  Mappings,
+  GetMappingsResponse,
+} from "./es-types";
 
 import { Config } from "./service";
 import { deepEqual, deepPatch } from "./object/deep";
@@ -133,13 +138,14 @@ export class IndexManager {
     index: string = this.esConfig.index
   ): Promise<Mappings> {
     const {
-      body: { [index]: config },
-    } = await this.esClient.indices.getMapping({
+      body: {
+        [index]: { mappings },
+      },
+    } = await this.esClient.indices.getMapping<GetMappingsResponse>({
       index,
       include_type_name: false,
     });
-    // eslint-disable-next-line
-    return config.mappings;
+    return mappings;
   }
 
   public async putMappings(

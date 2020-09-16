@@ -189,6 +189,10 @@ export type SimpleType =
   | "geo_shape";
 
 export type MappingAnalyzer = "english" | "spanish" | "portuguese" | string; // TODO: couple with custom analyzer without allowing any string
+
+export interface GetMappingsResponse {
+  [key: string]: { mappings: Mappings };
+}
 // #endregion
 
 // #region Settings
