@@ -1,4 +1,4 @@
-import { context, test } from "./test/language";
+import { context, test } from "../test/language";
 
 context("Index Migrations", () => {
   test("Creating a new index", (_) => {

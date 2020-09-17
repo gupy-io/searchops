@@ -12,7 +12,8 @@
     "lint": "eslint src --ext .js,.ts",
     "test": "jest",
     "build": "tsc --project tsconfig.dist.json",
-    "build:watch": "tsc --watch --project tsconfig.dist.json"
+    "build:watch": "tsc --watch --project tsconfig.dist.json",
+    "build:clean": "rm -rf lib tsconfig.dist.tsbuildinfo"
   },
   "repository": {
     "type": "git",

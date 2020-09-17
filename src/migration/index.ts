@@ -4,10 +4,10 @@ import {
   GetSettingsResponse,
   Mappings,
   GetMappingsResponse,
-} from "./es-types";
+} from "../es-types";
 
-import { Config } from "./service";
-import { deepEqual, deepPatch } from "./object/deep";
+import { Config } from "../service";
+import { deepEqual, deepPatch } from "../object/deep";
 
 export class IndexManager {
   private esClient: Client;
