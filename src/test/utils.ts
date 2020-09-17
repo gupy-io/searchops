@@ -4,7 +4,8 @@ import { random } from "faker";
 import { Config } from "../service";
 
 export function getRandomSnakeCase(): string {
-  return random.word().replace(/\W/g, "_").toLowerCase();
+  const word = random.word().replace(/\W/g, "_").toLowerCase();
+  return `${word}_${new Date().valueOf()}`;
 }
 
 export function getTestClient(): Client {

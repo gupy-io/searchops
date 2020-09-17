@@ -1,19 +1,14 @@
 /* eslint-disable @typescript-eslint/unbound-method */
-import faker from "faker";
-
-import { getTestClient } from "./test/utils";
+import { getTestClient, getRandomSnakeCase } from "./test/utils";
 import { Config } from "./service";
 import { IndexManager } from "./migration";
-
-const randomSnakeCase = (): string =>
-  faker.random.word().replace(/\W/g, "_").toLowerCase();
 
 describe("Elasticsearch Index Migration @integration tests", () => {
   const esClient = getTestClient();
   const esConfig: Config = {
-    index: randomSnakeCase(),
-    alias: randomSnakeCase(),
-    dtype: randomSnakeCase(),
+    index: getRandomSnakeCase(),
+    alias: getRandomSnakeCase(),
+    dtype: getRandomSnakeCase(),
     settings: {
       number_of_shards: "1",
       number_of_replicas: "1",

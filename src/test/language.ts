@@ -209,12 +209,16 @@ class Scenario {
 
   public build(): void {
     describe(this.testWorld.context, () => {
-      this.testWorld.contextSetup.forEach(
-        // TODO: remove when jest>26.4.2 lands
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        (setUp) => beforeAll(setUp)
-      );
       describe(this.testWorld.exercise, () => {
+        // TODO: remove eslint-disable after https://github.com/facebook/jest/issues/10066
+        /* eslint-disable @typescript-eslint/no-floating-promises */
+        /* eslint-disable @typescript-eslint/no-misused-promises */
+        beforeAll(() =>
+          this.testWorld.contextSetup.reduce(
+            (chain, setUp) => chain.then(setUp),
+            Promise.resolve()
+          )
+        );
         test(this.testWorld.expectation, async () => {
           await this.testWorld.exerciseRoutines.reduce(
             (chain, routine) => chain.then(routine),
@@ -224,10 +228,14 @@ class Scenario {
             expectation()
           );
         });
-        this.testWorld.contextTeardown.forEach(
-          // TODO: remove when jest>26.4.2 lands
-          // eslint-disable-next-line @typescript-eslint/no-misused-promises
-          (tearDown) => afterAll(tearDown)
+        // TODO: remove eslint-disable after https://github.com/facebook/jest/issues/10066
+        /* eslint-disable @typescript-eslint/no-floating-promises */
+        /* eslint-disable @typescript-eslint/no-misused-promises */
+        afterAll(() =>
+          this.testWorld.contextTeardown.reduce(
+            (chain, tearDown) => chain.then(tearDown),
+            Promise.resolve()
+          )
         );
       });
     });
