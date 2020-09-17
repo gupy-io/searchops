@@ -1,9 +1,16 @@
 /* eslint-disable @typescript-eslint/unbound-method */
+import { context, test } from "./test/language";
 import { getTestClient, getRandomSnakeCase } from "./test/utils";
 import { Config } from "./service";
 import { IndexManager } from "./migration";
 
-describe("Elasticsearch Index Migration @integration tests", () => {
+context("IndexManager", () => {
+  test("Creating a new index", (_) => {
+    _.givenTheIndex().wasNotCreated();
+    _.whenTheManager().performsMigration();
+    _.thenTheIndex().shouldExist();
+  });
+
   const esClient = getTestClient();
   const esConfig: Config = {
     index: getRandomSnakeCase(),
@@ -29,7 +36,11 @@ describe("Elasticsearch Index Migration @integration tests", () => {
     jest.spyOn(esClient.indices, "updateAliases");
   });
   afterEach(async () => {
-    await manager.deleteIndex();
+    try {
+      await manager.deleteIndex();
+    } catch {
+      // shhh don't worry
+    }
     jest.restoreAllMocks();
   });
 

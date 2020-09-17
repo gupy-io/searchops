@@ -1,4 +1,5 @@
 import { Client } from "@elastic/elasticsearch";
+import type { Logger } from "winston";
 import { random } from "faker";
 
 import { Config } from "../service";
@@ -8,15 +9,18 @@ export function getRandomSnakeCase(): string {
   return `${word}_${new Date().valueOf()}`;
 }
 
-export function getTestClient(): Client {
+export function getTestClient(logger?: Logger): Client {
   const elasticHost = process.env.ELASTIC_HOST ?? "localhost";
   const elasticPort = process.env.ELASTIC_PORT ?? "9200";
   const esClient: Client = new Client({
     node: `http://${elasticHost}:${elasticPort}`,
   });
-  esClient.on("response", (error, result): void => {
-    if (error) console.log(JSON.stringify(result, null, 2));
-  });
+  if (logger) {
+    esClient.on("response", (error, result): void => {
+      if (error) logger.error(JSON.stringify(result, null, 2));
+      else logger.debug(JSON.stringify(result, null, 2));
+    });
+  }
   return esClient;
 }
 

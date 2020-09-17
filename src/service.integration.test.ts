@@ -1,6 +1,6 @@
 import { context, test } from "./test/language";
 
-context("SearchService @integration", () => {
+context("SearchService", () => {
   test("Creating new documents", (_) => {
     _.givenTheIndex().wasCreated();
     _.givenTheDocument().containing({ title: "Dr Who" });

@@ -1,10 +1,18 @@
 import { describe, test, beforeAll, afterAll } from "@jest/globals";
-import { createLogger } from "winston";
-import { Document, SearchService } from "../service";
+import winston from "winston";
+import { Config, Document, SearchService } from "../service";
 import { IndexManager } from "../migration";
 import * as utils from "./utils";
 
-const logger = createLogger({ silent: true });
+const logger = winston.createLogger({
+  transports: [
+    new winston.transports.Console({
+      format: winston.format.simple(),
+    }),
+  ],
+  silent: true,
+  level: "debug",
+});
 
 interface TestDocument extends Document {
   id: string;
@@ -23,17 +31,37 @@ interface TestDocument extends Document {
 }
 
 interface TestWorld {
-  searchService: SearchService<TestDocument>;
+  esConfig: Config;
   indexManager: IndexManager;
+  searchService: SearchService<TestDocument>;
   document: TestDocument;
   count: number;
   context: string;
-  contextSetup: (() => Promise<void>)[];
-  contextTeardown: (() => Promise<void>)[];
+  contextSetup: (() => void | Promise<void>)[];
+  contextTeardown: (() => void | Promise<void>)[];
   exercise: string;
-  exerciseRoutines: (() => Promise<void>)[];
+  exerciseRoutines: (() => void | Promise<void>)[];
   expectation: string;
-  expectationChecks: (() => void)[];
+  expectationChecks: (() => void | Promise<void>)[];
+}
+
+class IndexManagerSteps {
+  private testWorld: TestWorld;
+
+  public constructor(testWorld: TestWorld) {
+    this.testWorld = testWorld;
+  }
+
+  public performsMigration(): IndexManagerSteps {
+    this.testWorld.exercise += " performs a migration";
+    this.testWorld.exerciseRoutines.push(async () => {
+      await this.testWorld.indexManager.migrate();
+    });
+    this.testWorld.contextTeardown.push(async () => {
+      await this.testWorld.indexManager.deleteIndex();
+    });
+    return this;
+  }
 }
 
 class IndexSteps {
@@ -50,6 +78,27 @@ class IndexSteps {
     });
     this.testWorld.contextTeardown.push(async () => {
       await this.testWorld.indexManager.deleteIndex();
+    });
+    return this;
+  }
+
+  public wasNotCreated(): IndexSteps {
+    this.testWorld.context += " was not created";
+    this.testWorld.contextSetup.push(async () => {
+      expect(await this.testWorld.indexManager.existsIndex()).toBeFalse();
+      expect(await this.testWorld.indexManager.existsAlias()).toBeFalse();
+    });
+    return this;
+  }
+
+  public shouldExist(): IndexSteps {
+    this.testWorld.expectation += " should exist";
+    this.testWorld.expectationChecks.push(async () => {
+      expect(await this.testWorld.indexManager.existsIndex()).toBeTrue();
+      expect(await this.testWorld.indexManager.existsAlias()).toBeTrue();
+      expect(await this.testWorld.indexManager.getSettings()).toEqual(
+        this.testWorld.esConfig.settings
+      );
     });
     return this;
   }
@@ -150,22 +199,24 @@ class ServiceSteps {
 
 class Scenario {
   private testWorld: TestWorld;
+  private indexManagerSteps: IndexManagerSteps;
   private indexSteps: IndexSteps;
   private documentSteps: DocumentSteps;
   private operationSteps: ServiceSteps;
   private countSteps: CountSteps;
 
   public constructor() {
-    const esClient = utils.getTestClient();
+    const esClient = utils.getTestClient(logger);
     const esConfig = utils.getRandomConfig();
 
     this.testWorld = {
+      esConfig,
+      indexManager: new IndexManager({ esClient, esConfig }),
       searchService: new SearchService({
         esClient,
         esConfig,
         logger: logger,
       }),
-      indexManager: new IndexManager({ esClient, esConfig }),
       document: { id: utils.getRandomSnakeCase() },
       count: 0,
       context: "",
@@ -176,6 +227,7 @@ class Scenario {
       expectation: "",
       expectationChecks: [],
     };
+    this.indexManagerSteps = new IndexManagerSteps(this.testWorld);
     this.indexSteps = new IndexSteps(this.testWorld);
     this.documentSteps = new DocumentSteps(this.testWorld);
     this.operationSteps = new ServiceSteps(this.testWorld);
@@ -192,9 +244,19 @@ class Scenario {
     return this.documentSteps;
   }
 
+  public whenTheManager(): IndexManagerSteps {
+    this.testWorld.exercise = "when the manager";
+    return this.indexManagerSteps;
+  }
+
   public whenTheService(): ServiceSteps {
     this.testWorld.exercise = "when the service";
     return this.operationSteps;
+  }
+
+  public thenTheIndex(): IndexSteps {
+    this.testWorld.expectation = "then the index";
+    return this.indexSteps;
   }
 
   public thenTheDocument(): DocumentSteps {
@@ -224,8 +286,9 @@ class Scenario {
             (chain, routine) => chain.then(routine),
             Promise.resolve()
           );
-          this.testWorld.expectationChecks.forEach((expectation) =>
-            expectation()
+          await this.testWorld.expectationChecks.reduce(
+            (chain, expectation) => chain.then(expectation),
+            Promise.resolve()
           );
         });
         // TODO: remove eslint-disable after https://github.com/facebook/jest/issues/10066
