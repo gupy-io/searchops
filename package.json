@@ -11,6 +11,7 @@
     "format": "prettier --write ./src/**/*.{js,ts}",
     "lint": "eslint src --ext .js,.ts",
     "test": "jest",
+    "test:build": "npm run build --prefix ./test/build",
     "build": "tsc --project tsconfig.dist.json",
     "build:watch": "tsc --watch --project tsconfig.dist.json",
     "build:clean": "rm -rf lib tsconfig.dist.tsbuildinfo"

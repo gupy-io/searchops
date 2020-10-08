@@ -1,17 +1,28 @@
-name: Jest
+name: Test
 
 on: [push]
 
 jobs:
 
-  test:
+  Jest:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
-      - run: docker-compose up -d
       - uses: actions/setup-node@v1
         with:
           node-version: 14
+      - run: docker-compose up -d
       - run: npm install
       - run: npm run test
+
+  Build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 14
+      - run: cd test/build && npm install
+      - run: npm run test:build

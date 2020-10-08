@@ -13,5 +13,8 @@ module.exports = {
     "prettier",
     "prettier/@typescript-eslint",
   ],
-  ignorePatterns: [".eslintrc.js", "lib"],
+  rules: {
+    "@typescript-eslint/ban-types": "off",
+  },
+  ignorePatterns: [".eslintrc.js", "lib", "test/build"],
 };
