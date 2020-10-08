@@ -1,10 +1,10 @@
-name: TSC
+name: Build
 
 on: [push]
 
 jobs:
 
-  build:
+  Compile:
     runs-on: ubuntu-latest
 
     steps:
@@ -12,6 +12,6 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: 14
-      - run: npm install
+      - run: npm ci
       - run: npm run build
       - run: if [ -n "$(git status --porcelain)" ]; then exit 1; fi
