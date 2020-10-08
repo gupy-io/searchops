@@ -1,4 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as NodeJSStream from "stream";
+
+type LogCallback = (error?: any, level?: string, message?: string, meta?: any) => void;
 
 interface LogEntry {
   level: string;
@@ -22,7 +25,7 @@ interface LeveledLogMethod {
   (infoObject: object): Logger;
 }
 
-interface WinstonLogger extends NodeJSStream.Transform {
+interface Logger extends NodeJSStream.Transform {
   log: LogMethod;
   clear(): Logger;
   close(): Logger;
@@ -53,3 +56,5 @@ interface WinstonLogger extends NodeJSStream.Transform {
   isDebugEnabled(): boolean;
   isSillyEnabled(): boolean;
 }
+
+export { Logger as WinstonLogger };
