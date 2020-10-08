@@ -1,6 +1,6 @@
 import awsSdk from "aws-sdk";
 import { Client } from "@elastic/elasticsearch";
-import { Logger } from "winston";
+import type { WinstonLogger } from "../typings/winston";
 import { AwsSignedConnection, UnsignedConnection } from "./aws";
 
 let client: Client;
@@ -13,7 +13,7 @@ interface ElasticsearchConfig {
 
 interface DatabaseInput {
   elasticConfig: ElasticsearchConfig;
-  logger: Logger;
+  logger: WinstonLogger;
 }
 
 export const createElasticsearch = ({

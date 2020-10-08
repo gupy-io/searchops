@@ -1,4 +1,4 @@
-import type { Logger } from "winston";
+import type { WinstonLogger } from "./typings/winston";
 import { Client, RequestParams, ApiResponse } from "@elastic/elasticsearch";
 import AJV from "ajv";
 import {
@@ -67,7 +67,7 @@ export class SearchService<D extends Document> implements Provider<D> {
   private esClient: Client;
   private esConfig: Config;
   private validate: AJV.ValidateFunction;
-  private logger: Logger;
+  private logger: WinstonLogger;
 
   public constructor({
     esClient,
@@ -76,7 +76,7 @@ export class SearchService<D extends Document> implements Provider<D> {
   }: {
     esClient: Client;
     esConfig: Config;
-    logger: Logger;
+    logger: WinstonLogger;
   }) {
     this.esClient = esClient;
     this.esConfig = esConfig;

@@ -1,5 +1,5 @@
 import { Client } from "@elastic/elasticsearch";
-import { Logger } from "winston";
+import type { WinstonLogger } from "../typings/winston";
 interface ElasticsearchConfig {
     elasticHost: string;
     elasticPort: number;
@@ -7,7 +7,7 @@ interface ElasticsearchConfig {
 }
 interface DatabaseInput {
     elasticConfig: ElasticsearchConfig;
-    logger: Logger;
+    logger: WinstonLogger;
 }
 export declare const createElasticsearch: ({ elasticConfig, logger, }: DatabaseInput) => Client | null;
 export {};

@@ -1,4 +1,4 @@
-import type { Logger } from "winston";
+import type { WinstonLogger } from "./typings/winston";
 import { Client, RequestParams } from "@elastic/elasticsearch";
 import { Document, Params, Result, Provider } from "./service";
 import { Mappings, Settings } from "./es-types";
@@ -17,7 +17,7 @@ export declare class SearchEngine<E, D extends Document> implements Provider<D> 
         settings?: Settings;
         mappings?: Mappings;
         serialize: (entity: E) => D;
-        logger: Logger;
+        logger: WinstonLogger;
     });
     getQueryBuilder(): QueryBuilder<D>;
     getIndexManager(triggerUpdate?: boolean): IndexManager;

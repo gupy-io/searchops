@@ -1,4 +1,4 @@
-import type { Logger } from "winston";
+import type { WinstonLogger } from "./typings/winston";
 import { Client, RequestParams } from "@elastic/elasticsearch";
 import { Settings, Mappings, Query, Sort, Aggregations } from "./es-types";
 export interface Document {
@@ -51,7 +51,7 @@ export declare class SearchService<D extends Document> implements Provider<D> {
     constructor({ esClient, esConfig, logger, }: {
         esClient: Client;
         esConfig: Config;
-        logger: Logger;
+        logger: WinstonLogger;
     });
     private getAction;
     bulk(body: Record<string, unknown>[], refresh?: "wait_for" | false): Promise<void>;
