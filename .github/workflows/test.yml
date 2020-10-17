@@ -4,7 +4,8 @@ on: [push]
 
 jobs:
 
-  Jest:
+  test-specs:
+    name: Jest
     runs-on: ubuntu-latest
 
     steps:
@@ -13,10 +14,11 @@ jobs:
         with:
           node-version: 14
       - run: docker-compose up -d
-      - run: npm install
+      - run: npm ci
       - run: npm run test
 
-  Build:
+  test-build:
+    name: TSC
     runs-on: ubuntu-latest
 
     steps:
