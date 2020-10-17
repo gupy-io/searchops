@@ -1,7 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as NodeJSStream from "stream";
 
-type LogCallback = (error?: any, level?: string, message?: string, meta?: any) => void;
+type LogCallback = (
+  error?: any,
+  level?: string,
+  message?: string,
+  meta?: any
+) => void;
 
 interface LogEntry {
   level: string;

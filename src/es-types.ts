@@ -20,7 +20,8 @@ export interface Query {
   query_string?: QueryStringQuery;
   term?: TermQuery;
   terms?: TermsQuery;
-  match?: TermQuery;
+  match?: MatchQuery;
+  match_phrase?: MatchPhraseQuery;
   match_phrase_prefix?: MatchPhrasePrefixQuery;
 }
 
@@ -47,6 +48,27 @@ export interface NestedQuery {
 
 export interface QueryStringQuery {
   query: string;
+  default_field?: string;
+  allow_leading_wildcard?: boolean;
+  analyze_wildcard?: boolean;
+  analyzer?: string;
+  auto_generate_synonyms_phrase_query?: boolean;
+  boost?: number;
+  default_operator?: "OR" | "AND";
+  enable_position_increments?: boolean;
+  fields?: string[];
+  fuzziness?: string;
+  fuzzy_max_expansions?: number;
+  fuzzy_prefix_length?: number;
+  fuzzy_transpositions?: boolean;
+  lenient?: boolean;
+  max_determinized_states?: number;
+  minimum_should_match?: string;
+  quote_analyzer?: string;
+  phrase_slop?: number;
+  quote_field_suffix?: string;
+  rewrite?: string;
+  time_zone?: string;
 }
 
 export interface TermQuery {
@@ -57,8 +79,45 @@ export interface TermsQuery {
   [field: string]: Value[];
 }
 
+export interface MatchQuery {
+  [field: string]:
+    | Value
+    | {
+        query: Value;
+        analyzer?: string;
+        auto_generate_synonyms_phrase_query?: boolean;
+        fuzziness?: string;
+        max_expansions?: number;
+        prefix_length?: number;
+        fuzzy_transpositions?: boolean;
+        fuzzy_rewrite?: string;
+        lenient?: boolean;
+        operator?: "OR" | "AND";
+        minimum_should_match?: string;
+        zero_terms_query?: "none" | "all";
+      };
+}
+
+export interface MatchPhraseQuery {
+  [field: string]:
+    | Value
+    | {
+        query: Value;
+        analyzer?: string;
+        zero_terms_query?: "none" | "all";
+      };
+}
+
 export interface MatchPhrasePrefixQuery {
-  [field: string]: Value | { query: Value; max_expansions?: number };
+  [field: string]:
+    | Value
+    | {
+        query: Value;
+        analyzer?: string;
+        max_expansions?: number;
+        slop?: number;
+        zero_terms_query?: "none" | "all";
+      };
 }
 
 // #endregion
