@@ -195,7 +195,7 @@ export class SearchService<D extends Document> implements Provider<D> {
         match_phrase_prefix: { name: string },
       },
       {
-        match_phrase_prefix: { "code.text": string },
+        match: { "code.text": string },
       },
       {
         nested: {
