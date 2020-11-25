@@ -62,6 +62,14 @@ class IndexManagerSteps {
     });
     return this;
   }
+
+  public performsRefresh(): IndexManagerSteps {
+    this.testWorld.exercise += " performs a refresh";
+    this.testWorld.exerciseRoutines.push(async () => {
+      await this.testWorld.indexManager.refreshIndex();
+    });
+    return this;
+  }
 }
 
 class IndexSteps {

@@ -232,4 +232,8 @@ export class IndexManager {
       },
     });
   }
+
+  public async refreshIndex(name: string = this.esConfig.index): Promise<void> {
+    await this.esClient.indices.refresh({ index: name })
+  }
 }
