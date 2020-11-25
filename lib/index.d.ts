@@ -1,6 +1,6 @@
 import type { WinstonLogger } from "./typings/winston";
 import { Client, RequestParams } from "@elastic/elasticsearch";
-import { Document, Params, Result, Provider } from "./service";
+import { Document, Params, Result, Provider, SimpleQuery } from "./service";
 import { Mappings, Settings } from "./es-types";
 import { QueryBuilder } from "./query";
 import { IndexManager } from "./migration";
@@ -24,6 +24,7 @@ export declare class SearchEngine<E, D extends Document> implements Provider<D> 
     bulk(body: Record<string, unknown>[], refresh: "wait_for" | false): Promise<void>;
     index(entity: E): Promise<void>;
     delete(docId: Document["id"], routing?: string): Promise<void>;
+    deleteByQuery(query: SimpleQuery): Promise<void>;
     search(params: Params): Promise<Result<D>>;
     count(body: RequestParams.Count["body"]): Promise<number>;
 }

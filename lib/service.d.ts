@@ -11,6 +11,9 @@ export interface Config {
     mappings: Mappings;
     settings: Settings;
 }
+export interface SimpleQuery {
+    ids: Document["id"][];
+}
 export interface Params {
     string: string;
     nested: string[];
@@ -58,6 +61,7 @@ export declare class SearchService<D extends Document> implements Provider<D> {
     get(id: D["id"]): Promise<D>;
     index(doc: D, refresh?: "wait_for" | "false"): Promise<void>;
     delete(docId: Document["id"], routing?: string): Promise<void>;
+    deleteByQuery(query: SimpleQuery): Promise<void>;
     private checkIfIsBooleanQuery;
     private getshould;
     search(params: Params): Promise<Result<D>>;

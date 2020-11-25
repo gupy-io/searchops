@@ -8,6 +8,7 @@ import {
   Result,
   Provider,
   SearchService,
+  SimpleQuery,
 } from "./service";
 import { Mappings, Settings } from "./es-types";
 import { QueryBuilder } from "./query";
@@ -78,6 +79,10 @@ export class SearchEngine<E, D extends Document> implements Provider<D> {
 
   public delete(docId: Document["id"], routing?: string): Promise<void> {
     return this.searchService.delete(docId, routing);
+  }
+
+  public deleteByQuery(query: SimpleQuery): Promise<void> {
+    return this.searchService.deleteByQuery(query);
   }
 
   public search(params: Params): Promise<Result<D>> {

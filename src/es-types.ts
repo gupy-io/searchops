@@ -7,8 +7,8 @@ export interface UpdateBody<T> {
 
 export interface SearchBody {
   query: Query;
-  sort: Sort | Sort[];
-  aggs: Aggregations;
+  sort?: Sort | Sort[];
+  aggs?: Aggregations;
 }
 
 // #region Query

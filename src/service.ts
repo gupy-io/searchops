@@ -25,6 +25,10 @@ export interface Config {
   settings: Settings;
 }
 
+export interface SimpleQuery {
+  ids: Document["id"][]
+}
+
 export interface Params {
   string: string;
   nested: string[];
@@ -166,6 +170,17 @@ export class SearchService<D extends Document> implements Provider<D> {
       } as RequestParams.Delete);
     } catch (error) {
       this.logger.error(`Error on deleting document ${docId}`, error);
+    }
+  }
+
+  public async deleteByQuery(query: SimpleQuery): Promise<void> {
+    try {
+      await this.esClient.deleteByQuery({
+        index: this.esConfig.alias,
+        body: { query: { terms: { id: query.ids } } },
+      } as RequestParams.DeleteByQuery<SearchBody>);
+    } catch (error) {
+      this.logger.error(`Error on deleting documents by query ${JSON.stringify(query)}`, error);
     }
   }
 
