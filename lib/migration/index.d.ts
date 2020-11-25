@@ -31,4 +31,5 @@ export declare class IndexManager {
     closeIndex(name?: string): Promise<void>;
     duplicate(sourceName: string, targetname: string): Promise<void>;
     swap(sourceName: string, targetName: string): Promise<void>;
+    refreshIndex(name?: string): Promise<void>;
 }
