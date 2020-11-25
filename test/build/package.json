@@ -5,7 +5,7 @@
     "build": "rm -rf ../../node_modules && tsc --noEmit"
   },
   "dependencies": {
-    "searchops": "file:../../searchops-0.0.1.tgz"
+    "searchops": "file:../../searchops-0.0.2.tgz"
   },
   "devDependencies": {
     "@types/node": "^14.11.2",
