@@ -1,6 +1,6 @@
 import { describe, test, beforeAll, afterAll } from "@jest/globals";
 import winston from "winston";
-import { Config, Document, SearchService } from "../service";
+import { Config, Document, SearchService, SimpleQuery } from "../service";
 import { IndexManager } from "../migration";
 import * as utils from "./utils";
 
@@ -192,6 +192,14 @@ class ServiceSteps {
       this.testWorld.count = await this.testWorld.searchService.count({
         query: { match_all: {} },
       });
+    });
+    return this;
+  }
+
+  public requestDeleteByQuery(query: SimpleQuery): ServiceSteps {
+    this.testWorld.exercise += " request delete by query";
+    this.testWorld.exerciseRoutines.push(async () => {
+      await this.testWorld.searchService.deleteByQuery(query);
     });
     return this;
   }

@@ -90,8 +90,16 @@ context("SearchService", () => {
 
   test("Counting documents", (_) => {
     _.givenTheIndex().wasCreated();
-    _.givenTheDocument().containing({ title: "Digimón" }).wasCreated();
+    _.givenTheDocument().wasCreated();
     _.whenTheService().requestCount();
     _.thenTheCount().shouldBe(1);
+  });
+
+  test("Deleting documents by query", (_) => {
+    _.givenTheIndex().wasCreated();
+    _.givenTheDocument().containing({ id: '1' }).wasCreated();
+    _.whenTheService().requestDeleteByQuery({ ids: ['1']});
+    _.whenTheService().requestCount();
+    _.thenTheCount().shouldBe(0);
   });
 });
