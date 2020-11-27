@@ -9,5 +9,5 @@ interface DatabaseInput {
     elasticConfig: ElasticsearchConfig;
     logger: WinstonLogger;
 }
-export declare const createElasticsearch: ({ elasticConfig, logger, }: DatabaseInput) => Client | null;
+export declare const createElasticsearch: ({ elasticConfig, logger, }: DatabaseInput) => Client;
 export {};

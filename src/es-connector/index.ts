@@ -19,7 +19,7 @@ interface DatabaseInput {
 export const createElasticsearch = ({
   elasticConfig,
   logger,
-}: DatabaseInput): Client | null => {
+}: DatabaseInput): Client => {
   if (!client) {
     const host = elasticConfig.elasticHost || "localhost";
     const port = elasticConfig.elasticPort || 9200;
