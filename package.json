@@ -31,7 +31,7 @@
   "homepage": "https://github.com/gupy-io/searchops#readme",
   "dependencies": {
     "@elastic/elasticsearch": "^7.9.0",
-    "ajv": "^6.12.5",
+    "ajv": "^7.0.2",
     "aws-sdk": "^2.752.0"
   },
   "peerDependencies": {
