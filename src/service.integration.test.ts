@@ -97,8 +97,8 @@ context("SearchService", () => {
 
   test("Deleting documents by query", (_) => {
     _.givenTheIndex().wasCreated();
-    _.givenTheDocument().containing({ id: '1' }).wasCreated();
-    _.whenTheService().requestDeleteByQuery({ ids: ['1']});
+    _.givenTheDocument().containing({ id: "1" }).wasCreated();
+    _.whenTheService().requestDeleteByQuery({ ids: ["1"] });
     _.whenTheManager().performsRefresh();
     _.whenTheService().requestCount();
     _.thenTheCount().shouldBe(0);

@@ -1,6 +1,6 @@
 import type { WinstonLogger } from "./typings/winston";
 import { Client, RequestParams, ApiResponse } from "@elastic/elasticsearch";
-import AJV from "ajv";
+import * as AJV from "ajv";
 import {
   Settings,
   Mappings,
@@ -26,7 +26,7 @@ export interface Config {
 }
 
 export interface SimpleQuery {
-  ids: Document["id"][]
+  ids: Document["id"][];
 }
 
 export interface Params {
@@ -180,7 +180,10 @@ export class SearchService<D extends Document> implements Provider<D> {
         body: { query: { terms: { id: query.ids } } },
       } as RequestParams.DeleteByQuery<SearchBody>);
     } catch (error) {
-      this.logger.error(`Error on deleting documents by query ${JSON.stringify(query)}`, error);
+      this.logger.error(
+        `Error on deleting documents by query ${JSON.stringify(query)}`,
+        error
+      );
     }
   }
 
@@ -242,9 +245,9 @@ export class SearchService<D extends Document> implements Provider<D> {
         aggs: facets,
       };
 
-      const response: ApiResponse<SearchResponse<
-        D
-      >> = await this.esClient.search({
+      const response: ApiResponse<
+        SearchResponse<D>
+      > = await this.esClient.search({
         index: this.esConfig.alias,
         type: this.esConfig.dtype,
         body: searchBody,

@@ -1,7 +1,7 @@
-import AJV from "ajv";
+import Ajv, { ValidateFunction } from "ajv";
 import { Mapping, ObjectMapping, NestedMapping } from "./es-types";
 
-const ajv = new AJV({ allErrors: true, coerceTypes: true });
+const ajv = new Ajv({ allErrors: true, coerceTypes: true });
 
 const esTypeMap = new Map([
   ["boolean", ["boolean"]],
@@ -70,15 +70,8 @@ export function translateObjectMapping(
   };
 }
 
-interface SyncValidationFunction extends AJV.ValidateFunction {
-  (data: Record<string, unknown>): boolean;
-  $async?: undefined;
-}
-
 export function getValidatorForMapping(
   mappings: ObjectMapping
-): SyncValidationFunction {
-  return ajv.compile(
-    translateObjectMapping(mappings)
-  ) as SyncValidationFunction;
+): ValidateFunction<unknown> {
+  return ajv.compile(translateObjectMapping(mappings));
 }
