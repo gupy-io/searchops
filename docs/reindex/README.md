@@ -1,6 +1,6 @@
-HAFT-
+# Zero Inconsistency Reindex
 
-# Background
+## Background
 
 In a blog post from 2013 [Elastic explained how to perform a mapping migration
 without downtime][1]. The process has been much facilitated by the [2016 release
@@ -15,11 +15,20 @@ of the Reindex API][2], but the overall strategy reproduced [here][3] and
 6. Remove old index
 
 But [several][5] [others][6] [have][7] [noticed][8] that there are extra steps
-to take care of what happens with reads and writes requests that arrive during
-the migration process, specially considering that the Reindex operation might
-take a while. "Zero Downtime" means you won't be getting
+to take care if you want to control what happens with reads and writes requests
+that arrive during the migration process - specially considering that the
+Reindex operation might take a while. "Zero Downtime" means you won't be getting
 `index_not_found_exception` errors, but for some applications that's far from
-enough.
+enough. In fact, this author believes that "endpoint downtime" is a superfluous
+concept for the search end users of an information retrieval; it is a particular
+case of retrieving a completely irrelevant response.
+
+The goals of the migration process are simply but ambitiously stated as: *users
+should not be able to notice it by analyzing retrieved documents*, who could
+otherwise notice inconsistencies between query/responses and inferences about
+existing documents. We focus on system behavior but take note that there are
+still other relevant concerns, e.g. operational performance of the Elasticsearch
+cluster during the migration as reindex tasks can be resource intensive.
 
 
 [1]: https://www.elastic.co/blog/changing-mapping-with-zero-downtime
@@ -31,8 +40,8 @@ enough.
 [7]: https://summera.github.io/infrastructure/2016/07/04/reindexing-elasticsearch.html
 [8]: https://stackoverflow.com/questions/48594229/elasticsearch-concurrent-updates-to-index-while-reindex-for-the-same-index-in
 
-# Problem Specification
+## Problem Specification
 
-# Solution
+## Solution
 
-# Proof
+## Proof
