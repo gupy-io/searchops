@@ -4,7 +4,7 @@ EXTENDS TLC, Elasticsearch
 (* --algorithm ZDR
 
 variables
-    known_documents = {[ id |-> 1 ], [ id |-> 2 ], [ id |-> 3 ]},
+    known_documents = {[ id |-> 1, version |-> 1 ]},
     cluster = NewCluster([
         aliases |-> {
             [ alias |-> "idx_r", index |-> "idx_v1" ],
@@ -39,51 +39,57 @@ begin
 end process
 
 process create = "POST /idx_{v}/_create/{id}"
-variable doc = [ id |-> 10 ]
+variable doc = [ id |-> 10, version |-> 1 ]
 begin
-    CreateRequest:
-        known_documents := known_documents \union { doc };
-        if ExistsIndex(cluster, "idx_v1") /\ ExistsIndex(cluster, "idx_v2") then
-            cluster := CreateDocument(CreateDocument(cluster, "idx_v1", doc), "idx_v2", doc);
-        elsif ExistsIndex(cluster, "idx_v1") then
+    WriteIndexV1:
+        if ExistsIndex(cluster, "idx_v1") then
             cluster := CreateDocument(cluster, "idx_v1", doc);
-        elsif ExistsIndex(cluster, "idx_v2") then
+        end if;
+    WriteIndexV2:
+        if ExistsIndex(cluster, "idx_v2") then
             cluster := CreateDocument(cluster, "idx_v2", doc);
         end if;
+    Check:
+        known_documents := known_documents \union { doc };
+        assert StatesAreConsistent;
 end process
 
-process update = "PUT /idx_"
-variable doc = [ id |-> 1 ]
-begin
-    UpdateRequest:
-        known_documents := known_documents \union { doc };
-        if ExistsIndex(cluster, "idx_v1") /\ ExistsIndex(cluster, "idx_v2") then
-            cluster := CreateDocument(CreateDocument(cluster, "idx_v1", doc), "idx_v2", doc);
-        elsif ExistsIndex(cluster, "idx_v1") then
-            cluster := CreateDocument(cluster, "idx_v1", doc);
-        elsif ExistsIndex(cluster, "idx_v2") then
-            cluster := CreateDocument(cluster, "idx_v2", doc);
-        end if;
-end process
+\*process update = "PUT /idx_"
+\*variable doc = [ id |-> 1, version |-> 2 ]
+\*begin
+\*    UpdateRequest:
+\*        known_documents := (known_documents \ {[ id |-> 1, version |-> 1 ]}) \union { doc };
+\*        if ExistsIndex(cluster, "idx_v1")
+\*            /\ ExistsDocument(cluster, "idx_v1", doc.id)
+\*            /\ ExistsIndex(cluster, "idx_v2")
+\*            /\ ExistsDocument(cluster, "idx_v2", doc.id)
+\*        then
+\*            cluster := UpdateDocument(UpdateDocument(cluster, "idx_v1", doc), "idx_v2", doc);
+\*        elsif ExistsIndex(cluster, "idx_v1") then
+\*            cluster := UpdateDocument(cluster, "idx_v1", doc);
+\*        elsif ExistsIndex(cluster, "idx_v2") then
+\*            cluster := UpdateDocument(cluster, "idx_v2", doc);
+\*        end if;
+\*end process
 
 end algorithm *)
 
-\* BEGIN TRANSLATION (chksum(pcal) = "6c68e98f" /\ chksum(tla) = "624618eb")
-\* Process variable doc of process create at line 42 col 10 changed to doc_
+\* BEGIN TRANSLATION (chksum(pcal) = "937e2fd8" /\ chksum(tla) = "8eb07c77")
+\* Label Check of process ZDR at line 35 col 9 changed to Check_
 VARIABLES known_documents, cluster, pc
 
 (* define statement *)
 ReadableDocuments == Search(cluster, "idx_r")
 StatesAreConsistent == ReadableDocuments = known_documents
 
-VARIABLES doc_, doc
+VARIABLE doc
 
-vars == << known_documents, cluster, pc, doc_, doc >>
+vars == << known_documents, cluster, pc, doc >>
 
-ProcSet == {"Zero Downtime Reindex"} \cup {"POST /idx_{v}/_create/{id}"} \cup {"PUT /idx_"}
+ProcSet == {"Zero Downtime Reindex"} \cup {"POST /idx_{v}/_create/{id}"}
 
 Init == (* Global variables *)
-        /\ known_documents = {[ id |-> 1 ], [ id |-> 2 ], [ id |-> 3 ]}
+        /\ known_documents = {[ id |-> 1, version |-> 1 ]}
         /\ cluster =           NewCluster([
                          aliases |-> {
                              [ alias |-> "idx_r", index |-> "idx_v1" ],
@@ -92,22 +98,19 @@ Init == (* Global variables *)
                          indices |-> {[ name |-> "idx_v1", docs |-> known_documents ]}
                      ])
         (* Process create *)
-        /\ doc_ = [ id |-> 10 ]
-        (* Process update *)
-        /\ doc = [ id |-> 1 ]
+        /\ doc = [ id |-> 10, version |-> 1 ]
         /\ pc = [self \in ProcSet |-> CASE self = "Zero Downtime Reindex" -> "CreateTargetIndex"
-                                        [] self = "POST /idx_{v}/_create/{id}" -> "CreateRequest"
-                                        [] self = "PUT /idx_" -> "UpdateRequest"]
+                                        [] self = "POST /idx_{v}/_create/{id}" -> "WriteIndexV1"]
 
 CreateTargetIndex == /\ pc["Zero Downtime Reindex"] = "CreateTargetIndex"
                      /\ cluster' = CreateIndex(cluster, [ name |-> "idx_v2", docs |-> {} ])
                      /\ pc' = [pc EXCEPT !["Zero Downtime Reindex"] = "CopyDocuments"]
-                     /\ UNCHANGED << known_documents, doc_, doc >>
+                     /\ UNCHANGED << known_documents, doc >>
 
 CopyDocuments == /\ pc["Zero Downtime Reindex"] = "CopyDocuments"
                  /\ cluster' = Reindex(cluster, "idx_v1", "idx_v2")
                  /\ pc' = [pc EXCEPT !["Zero Downtime Reindex"] = "AtomicAliasSwap"]
-                 /\ UNCHANGED << known_documents, doc_, doc >>
+                 /\ UNCHANGED << known_documents, doc >>
 
 AtomicAliasSwap == /\ pc["Zero Downtime Reindex"] = "AtomicAliasSwap"
                    /\ cluster' =            UpdateAlias(cluster, {
@@ -115,63 +118,58 @@ AtomicAliasSwap == /\ pc["Zero Downtime Reindex"] = "AtomicAliasSwap"
                                      [ alias |-> "idx_w", index |-> "idx_v2" ]
                                  })
                    /\ pc' = [pc EXCEPT !["Zero Downtime Reindex"] = "DeleteSourceIndex"]
-                   /\ UNCHANGED << known_documents, doc_, doc >>
+                   /\ UNCHANGED << known_documents, doc >>
 
 DeleteSourceIndex == /\ pc["Zero Downtime Reindex"] = "DeleteSourceIndex"
                      /\ cluster' = DeleteIndex(cluster, "idx_v1")
-                     /\ pc' = [pc EXCEPT !["Zero Downtime Reindex"] = "Check"]
-                     /\ UNCHANGED << known_documents, doc_, doc >>
+                     /\ pc' = [pc EXCEPT !["Zero Downtime Reindex"] = "Check_"]
+                     /\ UNCHANGED << known_documents, doc >>
 
-Check == /\ pc["Zero Downtime Reindex"] = "Check"
-         /\ Assert(~ExistsIndex(cluster, "idx_v1"), 
-                   "Failure of assertion at line 35, column 9.")
-         /\ Assert(ExistsIndex(cluster, "idx_v2"), 
-                   "Failure of assertion at line 36, column 9.")
-         /\ Assert(ExistsAlias(cluster, [ alias |-> "idx_r", index |-> "idx_v2" ]), 
-                   "Failure of assertion at line 37, column 9.")
-         /\ Assert(ExistsAlias(cluster, [ alias |-> "idx_w", index |-> "idx_v2" ]), 
-                   "Failure of assertion at line 38, column 9.")
-         /\ pc' = [pc EXCEPT !["Zero Downtime Reindex"] = "Done"]
-         /\ UNCHANGED << known_documents, cluster, doc_, doc >>
+Check_ == /\ pc["Zero Downtime Reindex"] = "Check_"
+          /\ Assert(~ExistsIndex(cluster, "idx_v1"), 
+                    "Failure of assertion at line 35, column 9.")
+          /\ Assert(ExistsIndex(cluster, "idx_v2"), 
+                    "Failure of assertion at line 36, column 9.")
+          /\ Assert(ExistsAlias(cluster, [ alias |-> "idx_r", index |-> "idx_v2" ]), 
+                    "Failure of assertion at line 37, column 9.")
+          /\ Assert(ExistsAlias(cluster, [ alias |-> "idx_w", index |-> "idx_v2" ]), 
+                    "Failure of assertion at line 38, column 9.")
+          /\ pc' = [pc EXCEPT !["Zero Downtime Reindex"] = "Done"]
+          /\ UNCHANGED << known_documents, cluster, doc >>
 
 ZDR == CreateTargetIndex \/ CopyDocuments \/ AtomicAliasSwap
-          \/ DeleteSourceIndex \/ Check
+          \/ DeleteSourceIndex \/ Check_
 
-CreateRequest == /\ pc["POST /idx_{v}/_create/{id}"] = "CreateRequest"
-                 /\ known_documents' = (known_documents \union { doc_ })
-                 /\ IF ExistsIndex(cluster, "idx_v1") /\ ExistsIndex(cluster, "idx_v2")
-                       THEN /\ cluster' = CreateDocument(CreateDocument(cluster, "idx_v1", doc_), "idx_v2", doc_)
-                       ELSE /\ IF ExistsIndex(cluster, "idx_v1")
-                                  THEN /\ cluster' = CreateDocument(cluster, "idx_v1", doc_)
-                                  ELSE /\ IF ExistsIndex(cluster, "idx_v2")
-                                             THEN /\ cluster' = CreateDocument(cluster, "idx_v2", doc_)
-                                             ELSE /\ TRUE
-                                                  /\ UNCHANGED cluster
-                 /\ pc' = [pc EXCEPT !["POST /idx_{v}/_create/{id}"] = "Done"]
-                 /\ UNCHANGED << doc_, doc >>
+WriteIndexV1 == /\ pc["POST /idx_{v}/_create/{id}"] = "WriteIndexV1"
+                /\ IF ExistsIndex(cluster, "idx_v1")
+                      THEN /\ cluster' = CreateDocument(cluster, "idx_v1", doc)
+                      ELSE /\ TRUE
+                           /\ UNCHANGED cluster
+                /\ pc' = [pc EXCEPT !["POST /idx_{v}/_create/{id}"] = "WriteIndexV2"]
+                /\ UNCHANGED << known_documents, doc >>
 
-create == CreateRequest
+WriteIndexV2 == /\ pc["POST /idx_{v}/_create/{id}"] = "WriteIndexV2"
+                /\ IF ExistsIndex(cluster, "idx_v2")
+                      THEN /\ cluster' = CreateDocument(cluster, "idx_v2", doc)
+                      ELSE /\ TRUE
+                           /\ UNCHANGED cluster
+                /\ pc' = [pc EXCEPT !["POST /idx_{v}/_create/{id}"] = "Check"]
+                /\ UNCHANGED << known_documents, doc >>
 
-UpdateRequest == /\ pc["PUT /idx_"] = "UpdateRequest"
-                 /\ known_documents' = (known_documents \union { doc })
-                 /\ IF ExistsIndex(cluster, "idx_v1") /\ ExistsIndex(cluster, "idx_v2")
-                       THEN /\ cluster' = CreateDocument(CreateDocument(cluster, "idx_v1", doc), "idx_v2", doc)
-                       ELSE /\ IF ExistsIndex(cluster, "idx_v1")
-                                  THEN /\ cluster' = CreateDocument(cluster, "idx_v1", doc)
-                                  ELSE /\ IF ExistsIndex(cluster, "idx_v2")
-                                             THEN /\ cluster' = CreateDocument(cluster, "idx_v2", doc)
-                                             ELSE /\ TRUE
-                                                  /\ UNCHANGED cluster
-                 /\ pc' = [pc EXCEPT !["PUT /idx_"] = "Done"]
-                 /\ UNCHANGED << doc_, doc >>
+Check == /\ pc["POST /idx_{v}/_create/{id}"] = "Check"
+         /\ known_documents' = (known_documents \union { doc })
+         /\ Assert(StatesAreConsistent, 
+                   "Failure of assertion at line 54, column 9.")
+         /\ pc' = [pc EXCEPT !["POST /idx_{v}/_create/{id}"] = "Done"]
+         /\ UNCHANGED << cluster, doc >>
 
-update == UpdateRequest
+create == WriteIndexV1 \/ WriteIndexV2 \/ Check
 
 (* Allow infinite stuttering to prevent deadlock on termination. *)
 Terminating == /\ \A self \in ProcSet: pc[self] = "Done"
                /\ UNCHANGED vars
 
-Next == ZDR \/ create \/ update
+Next == ZDR \/ create
            \/ Terminating
 
 Spec == Init /\ [][Next]_vars

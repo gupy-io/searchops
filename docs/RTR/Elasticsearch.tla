@@ -69,6 +69,21 @@ CreateDocument(cluster, index_or_alias, doc) ==
                     \union {[ name |-> index.name, docs |-> index.docs \union { doc } ]}
             ]
 
+UpdateDocument(cluster, index_or_alias, doc) ==
+    IF ~ExistsDocument(cluster, index_or_alias, doc.id) THEN
+        Assert(FALSE, "Document does not exist")
+    ELSE
+        LET
+            index == IndexFromIndexOrAlias(cluster, index_or_alias)
+            prevs == CHOOSE prevs \in index.docs : prevs.id = doc.id
+        IN
+            [
+                aliases |-> cluster.aliases,
+                indices |-> (cluster.indices \ { index })
+                    \union {[ name |-> index.name, docs |-> (index.docs \ { prevs }) \union { doc } ]}
+            ]
+
+
 Search(cluster, index_or_alias) ==
     LET
         index == IndexFromIndexOrAlias(cluster, index_or_alias)

@@ -137,38 +137,82 @@ reindex copies existing documents to the new index but before the write alias is
 swapped. This indeed leads to data loss because the new document lives only in
 the old index and the whole index is later deleted.
 
-### ZDR + Duplicate Writes
+### ZDR + Write To New
+
+The immediate fix for the data loss scenario described on the zero downtime
+reindex procedure is to perform writes in the new index. The drawback is that
+until the read alias is changed to the new index, users will be served with
+stale data.
+
+### ZDR + Write To New And Read From Both
+
+### ZDR + Write To Both And Read From Old Until Reindex Is Done
 
 One common addition to the standard ZDR procedure is to configure the
 application to write to both indexes. This is often hand-waved as a solution,
-but not immediately obvious on how to implement atomically. Let's be generous
-and suppose that the application is able to decide to and perform the dual write
-in a single step.
+but not immediately obvious on how to implement the dual write atomically and
+how would the application know to engage on write duplication.
+
+One way for the application to know a relocation is in progress would be to see
+if the read alias is pointing to multiple indexes.
 
 ```
-process create = "POST /_bulk"
-variable doc = [ id |-> 10 ]
+process create = "POST /idx_{v}/_create/{id}"
+variable doc = [ id |-> 10, version |-> 1 ]
 begin
-    CreateRequest:
-        known_documents := known_documents \union { doc };
-        if ExistsIndex(cluster, "idx_v1") /\ ExistsIndex(cluster, "idx_v2") then
-            cluster := CreateDocument(CreateDocument(cluster, "idx_v1", doc), "idx_v2", doc);
-        elsif ExistsIndex(cluster, "idx_v1") then
+    CheckIndexV1:
+        if ExistsIndex(cluster, "idx_v1") then
+    WriteIndexV1:
             cluster := CreateDocument(cluster, "idx_v1", doc);
-        elsif ExistsIndex(cluster, "idx_v2") then
+        end if;
+    CheckIndexV2:
+        if ExistsIndex(cluster, "idx_v2") then
+    WriteIndexV2:
             cluster := CreateDocument(cluster, "idx_v2", doc);
         end if;
+    Check:
+        known_documents := known_documents \union { doc };
+        assert StatesAreConsistent;
 end process
 ```
+
+Sure enough, the model check errors because between the request that informs the
+client that an index exists and the request to create the document on said
+index, the index might have been deleted.
+
+Elasticsearch
+doesn't allow writing to an alias that points to multiple indexes, so the only
+way to write to two indices in a single request is to use the [Bulk API][bulk].
+
+If the application is to decide at runtime if it needs to dual write, there's
+yet another atomocity problem.
+
+Let's be generous
+and suppose that the application is able to decide to and perform the dual write
+in a single step.
 
 With this method of creating new documents, the model checks successfully! This
 means that if the application only appends new documents, duplicate writes will
 achieve the desired relocation transparency. What happens if we want to update
-existing documents? Let's try to peform duplicated updates too:
+existing documents? Let's try to peform duplicated updates, though this it's a
+bit more convoluted than creates because we need to check if the document
+already exists too:
 
 ```
 ```
+
+[bulk]: https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-bulk.html
 
 ## Proposal
 
 ## Proof
+
+## FAQ
+
+1. Reindexing is not an atomic operation, it takes a while to complete and can
+   fail halfway through. Wouldn't you have to take this into account?
+
+    There's no loss of generality on modeling it as atomic because the failure
+    modes of a multi-step reindex are the same as those expected in "about to
+    start" reindex (non-empty set of documents in old index but not in new
+    index).
