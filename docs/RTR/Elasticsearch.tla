@@ -39,19 +39,25 @@ UpdateAlias(cluster, aliases) ==
     ]
 
 IndexFromIndexOrAlias(cluster, index_or_alias) ==
+    IF ExistsIndex(cluster, index_or_alias) THEN
+        CHOOSE idx \in cluster.indices : idx.name = index_or_alias
+    ELSE
     LET
         alias == CHOOSE als \in cluster.aliases : (als.index = index_or_alias \/ als.alias = index_or_alias)
     IN
     CHOOSE idx \in cluster.indices : idx.name = alias.index
 
 
-Search(cluster, index_or_alias) ==
+ExistsDocument(cluster, index_or_alias, doc_id) ==
     LET
         index == IndexFromIndexOrAlias(cluster, index_or_alias)
     IN
-    index.docs
+    doc_id \in { doc.id : doc \in index.docs }
 
 CreateDocument(cluster, index_or_alias, doc) ==
+    IF ExistsDocument(cluster, index_or_alias, doc.id)
+    THEN Assert(FALSE, "Document already exists")
+    ELSE
     LET
         index == IndexFromIndexOrAlias(cluster, index_or_alias)
     IN
@@ -61,6 +67,11 @@ CreateDocument(cluster, index_or_alias, doc) ==
             \union {[ name |-> index.name, docs |-> index.docs \union { doc } ]}
     ]
 
+Search(cluster, index_or_alias) ==
+    LET
+        index == IndexFromIndexOrAlias(cluster, index_or_alias)
+    IN
+    index.docs
 
 Reindex(cluster, source_name, target_name) ==
     LET

@@ -63,27 +63,10 @@ Make.
 ### Zero Downtime Reindex
 
 We will start off with a system [specification](/docs/RTR/zdr.tla) for the
-reindex procedure presented [previously](#background).
+reindex procedure [presented by Elastic][1].
 
 ```
 (* --algorithm ZDR
-
-variables
-    known_documents = {[ id |-> 1 ], [ id |-> 2 ], [ id |-> 3 ]},
-    cluster = NewCluster([
-        aliases |-> {
-            [ alias |-> "idx_r", index |-> "idx_v1" ],
-            [ alias |-> "idx_w", index |-> "idx_v1" ]
-        },
-        indices |-> {[ name |-> "idx_v1", docs |-> known_documents ]}
-    ]);
-
-define
-    ReadableDocuments == Search(cluster, "idx_r")
-    StatesAreConsistent == ReadableDocuments = known_documents
-    StatesAreEventuallyConsistent == <>[]StatesAreConsistent
-end define;
-
 process ZDR = "Zero Downtime Reindex"
 begin
     CreateTarget:
@@ -121,8 +104,9 @@ begin
 end process
 ```
 
-At first, with those verifications the model checks without errors. But what if
-we add a process that creates a document?
+With only such read processes the model checks without errors, so there is no
+downtime indeed. But what happens with relocation transparency if we add a
+process that creates a document?
 
 ```
 process create = "PUT /idx_w/_create/{id}"
@@ -134,12 +118,12 @@ begin
 end process
 ```
 
-The model checker spits `Error: Invariant StatesAreConsistent is violated.`, as
-expected. More importantly, it gives us the event history that lead this
+The model checker spits `Error: Invariant StatesAreConsistent is violated`, as
+expected. More importantly, it gives us the event history that lead to this
 violation:
 
 ```
-$ tlc zdr1.tla
+$ tlc zdr1.tla | grep State
 Error: Invariant StatesAreConsistent is violated.
 State 1: <Initial predicate>
 State 2: <CreateTargetIndex line 86, col 17 to line 89, col 55 of module zdr1>
@@ -152,6 +136,38 @@ When a new document is created, it might be written to the old index after the
 reindex copies existing documents to the new index but before the write alias is
 swapped. This indeed leads to data loss because the new document lives only in
 the old index and the whole index is later deleted.
+
+### ZDR + Duplicate Writes
+
+One common addition to the standard ZDR procedure is to configure the
+application to write to both indexes. This is often hand-waved as a solution,
+but not immediately obvious on how to implement atomically. Let's be generous
+and suppose that the application is able to decide to and perform the dual write
+in a single step.
+
+```
+process create = "POST /_bulk"
+variable doc = [ id |-> 10 ]
+begin
+    CreateRequest:
+        known_documents := known_documents \union { doc };
+        if ExistsIndex(cluster, "idx_v1") /\ ExistsIndex(cluster, "idx_v2") then
+            cluster := CreateDocument(CreateDocument(cluster, "idx_v1", doc), "idx_v2", doc);
+        elsif ExistsIndex(cluster, "idx_v1") then
+            cluster := CreateDocument(cluster, "idx_v1", doc);
+        elsif ExistsIndex(cluster, "idx_v2") then
+            cluster := CreateDocument(cluster, "idx_v2", doc);
+        end if;
+end process
+```
+
+With this method of creating new documents, the model checks successfully! This
+means that if the application only appends new documents, duplicate writes will
+achieve the desired relocation transparency. What happens if we want to update
+existing documents? Let's try to peform duplicated updates too:
+
+```
+```
 
 ## Proposal
 
