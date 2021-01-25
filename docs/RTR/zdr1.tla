@@ -3,116 +3,116 @@ EXTENDS TLC, Elasticsearch
 
 (* --algorithm ZDR
 
+variables
+    documents = {},
+    cluster = NewCluster([
+        aliases |-> {
+            [ alias |-> "idx_r", index |-> "idx_v1" ],
+            [ alias |-> "idx_w", index |-> "idx_v1" ]
+        },
+        indices |-> {[ name |-> "idx_v1", docs |-> documents ]}
+    ]);
+
 process ZDR = "Zero Downtime Reindex"
 begin
     CreateTarget:
-        assert target_index_name \notin existing_indices;
-        existing_indices := existing_indices \union { target_index_name };
-    Reindex:
-        assert source_index_name \in existing_indices;
-        assert target_index_name \in existing_indices;
-        target_index_docs := source_index_docs;
-    UpdateAliases:
-        write_alias := target_index_name;
-        read_alias := target_index_name;
+        cluster := CreateIndex(cluster, [ name |-> "idx_v2", docs |-> {} ]);
+    CopyDocuments:
+        cluster := Reindex(cluster, "idx_v1", "idx_v2");
+    AtomicAliasSwap:
+        cluster := UpdateAlias(cluster, {
+            [ alias |-> "idx_r", index |-> "idx_v2" ],
+            [ alias |-> "idx_w", index |-> "idx_v2" ]
+        });
     DeleteSource:
-        existing_indices := existing_indices \ { source_index_name };
+        cluster := DeleteIndex(cluster, "idx_v1");
     Check:
-        assert target_index_name \in existing_indices;
-        assert source_index_name \notin existing_indices;
-        assert read_alias = target_index_name;
-        assert write_alias = target_index_name;
-        assert target_index_docs = documents;
+        assert ~ExistsIndex(cluster, "idx_v1");
+        assert ExistsIndex(cluster, "idx_v2");
+        assert ExistsAlias(cluster, [ alias |-> "idx_r", index |-> "idx_v2" ]);
+        assert ExistsAlias(cluster, [ alias |-> "idx_w", index |-> "idx_v2" ]);
+        assert documents = Search(cluster, "idx_r");
+end process
+
+process search = "GET /_search"
+begin
+    SearchRequest:
+        skip;
 end process
 
 end algorithm *)
 
-\* BEGIN TRANSLATION (chksum(pcal) = "7b16f75f" /\ chksum(tla) = "e268b457")
-VARIABLES documents, source_index_name, source_index_docs, target_index_name, 
-          target_index_docs, write_alias, read_alias, existing_indices, pc
+\* BEGIN TRANSLATION (chksum(pcal) = "fa09f57d" /\ chksum(tla) = "b80aeca9")
+VARIABLES documents, cluster, pc
 
-(* define statement *)
-ReadAvailableDocs ==
-    CASE read_alias = source_index_name -> source_index_docs
-     []  read_alias = target_index_name -> target_index_docs
-DocumentsAreConsistent == ReadAvailableDocs = documents
+vars == << documents, cluster, pc >>
 
-
-vars == << documents, source_index_name, source_index_docs, target_index_name, 
-           target_index_docs, write_alias, read_alias, existing_indices, pc
-        >>
-
-ProcSet == {"Zero Downtime Reindex"}
+ProcSet == {"Zero Downtime Reindex"} \cup {"GET /_search"}
 
 Init == (* Global variables *)
-        /\ documents = {[id |-> 1], [id |-> 2], [id |-> 3]}
-        /\ source_index_name = "source"
-        /\ source_index_docs = documents
-        /\ target_index_name = "target"
-        /\ target_index_docs = {}
-        /\ write_alias = source_index_name
-        /\ read_alias = source_index_name
-        /\ existing_indices = { source_index_name }
-        /\ pc = [self \in ProcSet |-> "CreateTarget"]
+        /\ documents = {}
+        /\ cluster =           NewCluster([
+                         aliases |-> {
+                             [ alias |-> "idx_r", index |-> "idx_v1" ],
+                             [ alias |-> "idx_w", index |-> "idx_v1" ]
+                         },
+                         indices |-> {[ name |-> "idx_v1", docs |-> documents ]}
+                     ])
+        /\ pc = [self \in ProcSet |-> CASE self = "Zero Downtime Reindex" -> "CreateTarget"
+                                        [] self = "GET /_search" -> "SearchRequest"]
 
 CreateTarget == /\ pc["Zero Downtime Reindex"] = "CreateTarget"
-                /\ Assert(target_index_name \notin existing_indices, 
-                          "Failure of assertion at line 32, column 9.")
-                /\ existing_indices' = (existing_indices \union { target_index_name })
-                /\ pc' = [pc EXCEPT !["Zero Downtime Reindex"] = "Reindex"]
-                /\ UNCHANGED << documents, source_index_name, 
-                                source_index_docs, target_index_name, 
-                                target_index_docs, write_alias, read_alias >>
+                /\ cluster' = CreateIndex(cluster, [ name |-> "idx_v2", docs |-> {} ])
+                /\ pc' = [pc EXCEPT !["Zero Downtime Reindex"] = "CopyDocuments"]
+                /\ UNCHANGED documents
 
-Reindex == /\ pc["Zero Downtime Reindex"] = "Reindex"
-           /\ Assert(source_index_name \in existing_indices, 
-                     "Failure of assertion at line 35, column 9.")
-           /\ Assert(target_index_name \in existing_indices, 
-                     "Failure of assertion at line 36, column 9.")
-           /\ target_index_docs' = source_index_docs
-           /\ pc' = [pc EXCEPT !["Zero Downtime Reindex"] = "UpdateAliases"]
-           /\ UNCHANGED << documents, source_index_name, source_index_docs, 
-                           target_index_name, write_alias, read_alias, 
-                           existing_indices >>
+CopyDocuments == /\ pc["Zero Downtime Reindex"] = "CopyDocuments"
+                 /\ cluster' = Reindex(cluster, "idx_v1", "idx_v2")
+                 /\ pc' = [pc EXCEPT !["Zero Downtime Reindex"] = "AtomicAliasSwap"]
+                 /\ UNCHANGED documents
 
-UpdateAliases == /\ pc["Zero Downtime Reindex"] = "UpdateAliases"
-                 /\ write_alias' = target_index_name
-                 /\ read_alias' = target_index_name
-                 /\ pc' = [pc EXCEPT !["Zero Downtime Reindex"] = "DeleteSource"]
-                 /\ UNCHANGED << documents, source_index_name, 
-                                 source_index_docs, target_index_name, 
-                                 target_index_docs, existing_indices >>
+AtomicAliasSwap == /\ pc["Zero Downtime Reindex"] = "AtomicAliasSwap"
+                   /\ cluster' =            UpdateAlias(cluster, {
+                                     [ alias |-> "idx_r", index |-> "idx_v2" ],
+                                     [ alias |-> "idx_w", index |-> "idx_v2" ]
+                                 })
+                   /\ pc' = [pc EXCEPT !["Zero Downtime Reindex"] = "DeleteSource"]
+                   /\ UNCHANGED documents
 
 DeleteSource == /\ pc["Zero Downtime Reindex"] = "DeleteSource"
-                /\ existing_indices' = existing_indices \ { source_index_name }
+                /\ cluster' = DeleteIndex(cluster, "idx_v1")
                 /\ pc' = [pc EXCEPT !["Zero Downtime Reindex"] = "Check"]
-                /\ UNCHANGED << documents, source_index_name, 
-                                source_index_docs, target_index_name, 
-                                target_index_docs, write_alias, read_alias >>
+                /\ UNCHANGED documents
 
 Check == /\ pc["Zero Downtime Reindex"] = "Check"
-         /\ Assert(target_index_name \in existing_indices, 
-                   "Failure of assertion at line 44, column 9.")
-         /\ Assert(source_index_name \notin existing_indices, 
-                   "Failure of assertion at line 45, column 9.")
-         /\ Assert(read_alias = target_index_name, 
-                   "Failure of assertion at line 46, column 9.")
-         /\ Assert(write_alias = target_index_name, 
-                   "Failure of assertion at line 47, column 9.")
-         /\ Assert(target_index_docs = documents, 
-                   "Failure of assertion at line 48, column 9.")
+         /\ Assert(~ExistsIndex(cluster, "idx_v1"), 
+                   "Failure of assertion at line 30, column 9.")
+         /\ Assert(ExistsIndex(cluster, "idx_v2"), 
+                   "Failure of assertion at line 31, column 9.")
+         /\ Assert(ExistsAlias(cluster, [ alias |-> "idx_r", index |-> "idx_v2" ]), 
+                   "Failure of assertion at line 32, column 9.")
+         /\ Assert(ExistsAlias(cluster, [ alias |-> "idx_w", index |-> "idx_v2" ]), 
+                   "Failure of assertion at line 33, column 9.")
+         /\ Assert(documents = Search(cluster, "idx_r"), 
+                   "Failure of assertion at line 34, column 9.")
          /\ pc' = [pc EXCEPT !["Zero Downtime Reindex"] = "Done"]
-         /\ UNCHANGED << documents, source_index_name, source_index_docs, 
-                         target_index_name, target_index_docs, write_alias, 
-                         read_alias, existing_indices >>
+         /\ UNCHANGED << documents, cluster >>
 
-ZDR == CreateTarget \/ Reindex \/ UpdateAliases \/ DeleteSource \/ Check
+ZDR == CreateTarget \/ CopyDocuments \/ AtomicAliasSwap \/ DeleteSource
+          \/ Check
+
+SearchRequest == /\ pc["GET /_search"] = "SearchRequest"
+                 /\ TRUE
+                 /\ pc' = [pc EXCEPT !["GET /_search"] = "Done"]
+                 /\ UNCHANGED << documents, cluster >>
+
+search == SearchRequest
 
 (* Allow infinite stuttering to prevent deadlock on termination. *)
 Terminating == /\ \A self \in ProcSet: pc[self] = "Done"
                /\ UNCHANGED vars
 
-Next == ZDR
+Next == ZDR \/ search
            \/ Terminating
 
 Spec == Init /\ [][Next]_vars
