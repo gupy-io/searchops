@@ -1,5 +1,5 @@
 ---- MODULE rtr ----
-EXTENDS Naturals, TLC
+EXTENDS TLC
 
 (* --algorithm RTR
 
@@ -8,26 +8,26 @@ variables
     source_index_name = "source", source_index = documents,
     target_index_name = "target", target_index = {},
     write_alias = source_index_name, read_alias = source_index_name,
-    indexes = { source_index_name };
+    existing_indices = { source_index_name };
 
 
 process RTR = "Relocation Transparent Reindex"
 begin
     CreateTarget:
-        assert target_index_name \notin indexes;
-        indexes := indexes \union { target_index_name };
+        assert target_index_name \notin existing_indices;
+        existing_indices := existing_indices \union { target_index_name };
     Reindex:
-        assert source_index_name \in indexes;
-        assert target_index_name \in indexes;
+        assert source_index_name \in existing_indices;
+        assert target_index_name \in existing_indices;
         target_index := source_index;
     UpdateAliases:
         write_alias := target_index_name;
         read_alias := target_index_name;
     DeleteSource:
-        indexes := indexes \ { source_index_name };
+        existing_indices := existing_indices \ { source_index_name };
     Check:
-        assert target_index_name \in indexes;
-        assert source_index_name \notin indexes;
+        assert target_index_name \in existing_indices;
+        assert source_index_name \notin existing_indices;
         assert read_alias = target_index_name;
         assert write_alias = target_index_name;
         assert target_index = documents;
@@ -71,12 +71,13 @@ end process
 
 end algorithm *)
 
-\* BEGIN TRANSLATION (chksum(pcal) = "4a3bbf50" /\ chksum(tla) = "caafcf3d")
-VARIABLES documents, source_index_name, source_index, target_index_name,
-          target_index, write_alias, read_alias, indexes, pc, doc
+\* BEGIN TRANSLATION (chksum(pcal) = "214ad3ad" /\ chksum(tla) = "355a7f5d")
+VARIABLES documents, source_index_name, source_index, target_index_name, 
+          target_index, write_alias, read_alias, existing_indices, pc, doc
 
-vars == << documents, source_index_name, source_index, target_index_name,
-           target_index, write_alias, read_alias, indexes, pc, doc >>
+vars == << documents, source_index_name, source_index, target_index_name, 
+           target_index, write_alias, read_alias, existing_indices, pc, doc
+        >>
 
 ProcSet == {"Relocation Transparent Reindex"} \cup {"PUT /_create_/{id}"} \cup {"GET /_search"} \cup {"GET /_doc/{id}"} \cup {"GET /_search"} \cup {"GET /_search"}
 
@@ -88,7 +89,7 @@ Init == (* Global variables *)
         /\ target_index = {}
         /\ write_alias = source_index_name
         /\ read_alias = source_index_name
-        /\ indexes = { source_index_name }
+        /\ existing_indices = { source_index_name }
         (* Process create *)
         /\ doc = [id|->10]
         /\ pc = [self \in ProcSet |-> CASE self = "Relocation Transparent Reindex" -> "CreateTarget"
@@ -99,54 +100,55 @@ Init == (* Global variables *)
                                         [] self = "GET /_search" -> "SearchRequest"]
 
 CreateTarget == /\ pc["Relocation Transparent Reindex"] = "CreateTarget"
-                /\ Assert(target_index_name \notin indexes,
+                /\ Assert(target_index_name \notin existing_indices, 
                           "Failure of assertion at line 17, column 9.")
-                /\ indexes' = (indexes \union { target_index_name })
+                /\ existing_indices' = (existing_indices \union { target_index_name })
                 /\ pc' = [pc EXCEPT !["Relocation Transparent Reindex"] = "Reindex"]
-                /\ UNCHANGED << documents, source_index_name, source_index,
-                                target_index_name, target_index, write_alias,
+                /\ UNCHANGED << documents, source_index_name, source_index, 
+                                target_index_name, target_index, write_alias, 
                                 read_alias, doc >>
 
 Reindex == /\ pc["Relocation Transparent Reindex"] = "Reindex"
-           /\ Assert(source_index_name \in indexes,
+           /\ Assert(source_index_name \in existing_indices, 
                      "Failure of assertion at line 20, column 9.")
-           /\ Assert(target_index_name \in indexes,
+           /\ Assert(target_index_name \in existing_indices, 
                      "Failure of assertion at line 21, column 9.")
            /\ target_index' = source_index
            /\ pc' = [pc EXCEPT !["Relocation Transparent Reindex"] = "UpdateAliases"]
-           /\ UNCHANGED << documents, source_index_name, source_index,
-                           target_index_name, write_alias, read_alias, indexes,
-                           doc >>
+           /\ UNCHANGED << documents, source_index_name, source_index, 
+                           target_index_name, write_alias, read_alias, 
+                           existing_indices, doc >>
 
 UpdateAliases == /\ pc["Relocation Transparent Reindex"] = "UpdateAliases"
                  /\ write_alias' = target_index_name
                  /\ read_alias' = target_index_name
                  /\ pc' = [pc EXCEPT !["Relocation Transparent Reindex"] = "DeleteSource"]
-                 /\ UNCHANGED << documents, source_index_name, source_index,
-                                 target_index_name, target_index, indexes, doc >>
+                 /\ UNCHANGED << documents, source_index_name, source_index, 
+                                 target_index_name, target_index, 
+                                 existing_indices, doc >>
 
 DeleteSource == /\ pc["Relocation Transparent Reindex"] = "DeleteSource"
-                /\ indexes' = indexes \ { source_index_name }
+                /\ existing_indices' = existing_indices \ { source_index_name }
                 /\ pc' = [pc EXCEPT !["Relocation Transparent Reindex"] = "Check"]
-                /\ UNCHANGED << documents, source_index_name, source_index,
-                                target_index_name, target_index, write_alias,
+                /\ UNCHANGED << documents, source_index_name, source_index, 
+                                target_index_name, target_index, write_alias, 
                                 read_alias, doc >>
 
 Check == /\ pc["Relocation Transparent Reindex"] = "Check"
-         /\ Assert(target_index_name \in indexes,
+         /\ Assert(target_index_name \in existing_indices, 
                    "Failure of assertion at line 29, column 9.")
-         /\ Assert(source_index_name \notin indexes,
+         /\ Assert(source_index_name \notin existing_indices, 
                    "Failure of assertion at line 30, column 9.")
-         /\ Assert(read_alias = target_index_name,
+         /\ Assert(read_alias = target_index_name, 
                    "Failure of assertion at line 31, column 9.")
-         /\ Assert(write_alias = target_index_name,
+         /\ Assert(write_alias = target_index_name, 
                    "Failure of assertion at line 32, column 9.")
-         /\ Assert(target_index = documents,
+         /\ Assert(target_index = documents, 
                    "Failure of assertion at line 33, column 9.")
          /\ pc' = [pc EXCEPT !["Relocation Transparent Reindex"] = "Done"]
-         /\ UNCHANGED << documents, source_index_name, source_index,
-                         target_index_name, target_index, write_alias,
-                         read_alias, indexes, doc >>
+         /\ UNCHANGED << documents, source_index_name, source_index, 
+                         target_index_name, target_index, write_alias, 
+                         read_alias, existing_indices, doc >>
 
 RTR == CreateTarget \/ Reindex \/ UpdateAliases \/ DeleteSource \/ Check
 
@@ -161,44 +163,45 @@ CreateRequest == /\ pc["PUT /_create_/{id}"] = "CreateRequest"
                                        /\ UNCHANGED target_index
                             /\ UNCHANGED source_index
                  /\ pc' = [pc EXCEPT !["PUT /_create_/{id}"] = "Done"]
-                 /\ UNCHANGED << source_index_name, target_index_name,
-                                 write_alias, read_alias, indexes, doc >>
+                 /\ UNCHANGED << source_index_name, target_index_name, 
+                                 write_alias, read_alias, existing_indices, 
+                                 doc >>
 
 create == CreateRequest
 
 UpdateRequest == /\ pc["GET /_search"] = "UpdateRequest"
                  /\ TRUE
                  /\ pc' = [pc EXCEPT !["GET /_search"] = "Done"]
-                 /\ UNCHANGED << documents, source_index_name, source_index,
-                                 target_index_name, target_index, write_alias,
-                                 read_alias, indexes, doc >>
+                 /\ UNCHANGED << documents, source_index_name, source_index, 
+                                 target_index_name, target_index, write_alias, 
+                                 read_alias, existing_indices, doc >>
 
 update == UpdateRequest
 
 GetByIdRequest == /\ pc["GET /_doc/{id}"] = "GetByIdRequest"
                   /\ TRUE
                   /\ pc' = [pc EXCEPT !["GET /_doc/{id}"] = "Done"]
-                  /\ UNCHANGED << documents, source_index_name, source_index,
-                                  target_index_name, target_index, write_alias,
-                                  read_alias, indexes, doc >>
+                  /\ UNCHANGED << documents, source_index_name, source_index, 
+                                  target_index_name, target_index, write_alias, 
+                                  read_alias, existing_indices, doc >>
 
 read == GetByIdRequest
 
 DeleteRequest == /\ pc["GET /_search"] = "DeleteRequest"
                  /\ TRUE
                  /\ pc' = [pc EXCEPT !["GET /_search"] = "Done"]
-                 /\ UNCHANGED << documents, source_index_name, source_index,
-                                 target_index_name, target_index, write_alias,
-                                 read_alias, indexes, doc >>
+                 /\ UNCHANGED << documents, source_index_name, source_index, 
+                                 target_index_name, target_index, write_alias, 
+                                 read_alias, existing_indices, doc >>
 
 delete == DeleteRequest
 
 SearchRequest == /\ pc["GET /_search"] = "SearchRequest"
                  /\ TRUE
                  /\ pc' = [pc EXCEPT !["GET /_search"] = "Done"]
-                 /\ UNCHANGED << documents, source_index_name, source_index,
-                                 target_index_name, target_index, write_alias,
-                                 read_alias, indexes, doc >>
+                 /\ UNCHANGED << documents, source_index_name, source_index, 
+                                 target_index_name, target_index, write_alias, 
+                                 read_alias, existing_indices, doc >>
 
 search == SearchRequest
 

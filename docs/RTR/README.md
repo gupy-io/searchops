@@ -45,7 +45,58 @@ users notice application performance degrataion.
 
 ## Problem
 
+Given a specified index in an Elasticsearch cluster, a client application that
+may issue read requests targeting one alias and write requests targeting another
+alias, and an existing set of documents, we want to find a sequence of index
+management operations that migrates the old index to a new one, without users
+perceiving inconsistencies between read responses and inferred states expected
+as result of prior read and write requests.
+
 ## Nonsolutions
+
+### Zero Downtime Reindex
+
+We will start off with a system [specification](/docs/RTR/zdr.tla) for the
+reindex procedure presented [previously](#background).
+
+```tla
+(* --algorithm ZDR
+
+variables
+    documents = {[id |-> 1], [id |-> 2], [id |-> 3]},
+    source_index_name = "source", source_index = documents,
+    write_alias = source_index_name, read_alias = source_index_name,
+    existing_indices = { source_index_name },
+    target_index_name = "target", target_index = {};
+
+
+process ZDR = "Zero Downtime Reindex"
+begin
+    CreateTarget:
+        assert target_index_name \notin existing_indices;
+        existing_indices := existing_indices \union { target_index_name };
+    Reindex:
+        assert source_index_name \in existing_indices;
+        assert target_index_name \in existing_indices;
+        target_index := source_index;
+    UpdateAliases:
+        write_alias := target_index_name;
+        read_alias := target_index_name;
+    DeleteSource:
+        existing_indices := existing_indices \ { source_index_name };
+    Check:
+        assert target_index_name \in existing_indices;
+        assert source_index_name \notin existing_indices;
+        assert read_alias = target_index_name;
+        assert write_alias = target_index_name;
+        assert target_index = documents;
+end process
+
+end algorithm *)
+```
+
+If
+
 
 ## Proposal
 
