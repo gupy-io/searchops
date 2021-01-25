@@ -25,8 +25,8 @@ task, the probability of such indidents are high.
 A more ambitious goal than "Zero Downtime" would be complete "Relocation
 Transparency": *users should not be able to notice data relocation by inspecting
 the system state*. This includes absence of 404 Resource Not Found responses,
-but also inconsistencies between query responses and inferences about existing
-documents after any operations.
+but also of inconsistencies between query responses and inferences about
+existing documents after any operations.
 
 This analysis focus on system state snapshots but one should take note that
 there are still other details that might affect user experience. For example,

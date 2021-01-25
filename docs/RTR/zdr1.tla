@@ -4,7 +4,7 @@ EXTENDS TLC, Elasticsearch
 (* --algorithm ZDR
 
 variables
-    known_documents = {[ id |-> 1 ], [ id |-> 2 ], [ id |-> 3 ]},
+    known_documents = {},
     cluster = NewCluster([
         aliases |-> {
             [ alias |-> "idx_r", index |-> "idx_v1" ],
@@ -14,8 +14,7 @@ variables
     ]);
 
 define
-    ReadableDocuments == Search(cluster, "idx_r")
-    StatesAreConsistent == ReadableDocuments = known_documents
+    StatesAreConsistent == Search(cluster, "idx_r") = known_documents
 end define;
 
 process ZDR = "Zero Downtime Reindex"
@@ -48,12 +47,11 @@ end process
 
 end algorithm *)
 
-\* BEGIN TRANSLATION (chksum(pcal) = "6f12e555" /\ chksum(tla) = "30f2fffd")
+\* BEGIN TRANSLATION (chksum(pcal) = "10993988" /\ chksum(tla) = "356777bd")
 VARIABLES known_documents, cluster, pc
 
 (* define statement *)
-ReadableDocuments == Search(cluster, "idx_r")
-StatesAreConsistent == ReadableDocuments = known_documents
+StatesAreConsistent == Search(cluster, "idx_r") = known_documents
 
 VARIABLE doc
 
@@ -62,7 +60,7 @@ vars == << known_documents, cluster, pc, doc >>
 ProcSet == {"Zero Downtime Reindex"} \cup {"PUT /idx_w/_create/{id}"}
 
 Init == (* Global variables *)
-        /\ known_documents = {[ id |-> 1 ], [ id |-> 2 ], [ id |-> 3 ]}
+        /\ known_documents = {}
         /\ cluster =           NewCluster([
                          aliases |-> {
                              [ alias |-> "idx_r", index |-> "idx_v1" ],
@@ -100,13 +98,13 @@ DeleteSourceIndex == /\ pc["Zero Downtime Reindex"] = "DeleteSourceIndex"
 
 Check == /\ pc["Zero Downtime Reindex"] = "Check"
          /\ Assert(~ExistsIndex(cluster, "idx_v1"), 
-                   "Failure of assertion at line 35, column 9.")
+                   "Failure of assertion at line 34, column 9.")
          /\ Assert(ExistsIndex(cluster, "idx_v2"), 
-                   "Failure of assertion at line 36, column 9.")
+                   "Failure of assertion at line 35, column 9.")
          /\ Assert(ExistsAlias(cluster, [ alias |-> "idx_r", index |-> "idx_v2" ]), 
-                   "Failure of assertion at line 37, column 9.")
+                   "Failure of assertion at line 36, column 9.")
          /\ Assert(ExistsAlias(cluster, [ alias |-> "idx_w", index |-> "idx_v2" ]), 
-                   "Failure of assertion at line 38, column 9.")
+                   "Failure of assertion at line 37, column 9.")
          /\ pc' = [pc EXCEPT !["Zero Downtime Reindex"] = "Done"]
          /\ UNCHANGED << known_documents, cluster, doc >>
 

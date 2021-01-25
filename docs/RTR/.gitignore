@@ -6,12 +6,10 @@
 *.toolbox/**
 
 # TLA+ Toolbox models
-*.toolbox/**/*.tla
-*.toolbox/**/*.out
-*.toolbox/**/*.cfg
 
 # PlusCal
 *.old
+*.cfg
 
 # TLC output
 states/
