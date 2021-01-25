@@ -38,17 +38,6 @@ UpdateAlias(cluster, aliases) ==
         indices |-> cluster.indices
     ]
 
-Reindex(cluster, source_name, target_name) ==
-    LET
-        source_index == CHOOSE idx \in cluster.indices : idx.name = source_name
-        target_index == CHOOSE idx \in cluster.indices : idx.name = target_name
-    IN
-    [
-        aliases |-> cluster.aliases,
-        indices |-> (cluster.indices \ { target_index })
-            \union {[ name |-> target_name, docs |-> source_index.docs ]}
-    ]
-
 IndexFromIndexOrAlias(cluster, index_or_alias) ==
     LET
         alias == CHOOSE als \in cluster.aliases : (als.index = index_or_alias \/ als.alias = index_or_alias)
@@ -61,5 +50,27 @@ Search(cluster, index_or_alias) ==
         index == IndexFromIndexOrAlias(cluster, index_or_alias)
     IN
     index.docs
+
+CreateDocument(cluster, index_or_alias, doc) ==
+    LET
+        index == IndexFromIndexOrAlias(cluster, index_or_alias)
+    IN
+    [
+        aliases |-> cluster.aliases,
+        indices |-> (cluster.indices \ { index })
+            \union {[ name |-> index.name, docs |-> index.docs \union { doc } ]}
+    ]
+
+
+Reindex(cluster, source_name, target_name) ==
+    LET
+        source_index == CHOOSE idx \in cluster.indices : idx.name = source_name
+        target_index == CHOOSE idx \in cluster.indices : idx.name = target_name
+    IN
+    [
+        aliases |-> cluster.aliases,
+        indices |-> (cluster.indices \ { target_index })
+            \union {[ name |-> target_name, docs |-> source_index.docs ]}
+    ]
 
 ====

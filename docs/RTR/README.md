@@ -68,33 +68,86 @@ reindex procedure presented [previously](#background).
 ```
 (* --algorithm ZDR
 
+variables
+    known_documents = {[ id |-> 1 ], [ id |-> 2 ], [ id |-> 3 ]},
+    cluster = NewCluster([
+        aliases |-> {
+            [ alias |-> "idx_r", index |-> "idx_v1" ],
+            [ alias |-> "idx_w", index |-> "idx_v1" ]
+        },
+        indices |-> {[ name |-> "idx_v1", docs |-> known_documents ]}
+    ]);
+
+define
+    ReadableDocuments == Search(cluster, "idx_r")
+    StatesAreConsistent == ReadableDocuments = known_documents
+    StatesAreEventuallyConsistent == <>[]StatesAreConsistent
+end define;
+
 process ZDR = "Zero Downtime Reindex"
 begin
     CreateTarget:
-        assert target_index_name \notin existing_indices;
-        existing_indices := existing_indices \union { target_index_name };
-    Reindex:
-        assert source_index_name \in existing_indices;
-        assert target_index_name \in existing_indices;
-        target_index_docs := source_index_docs;
-    UpdateAliases:
-        write_alias := target_index_name;
-        read_alias := target_index_name;
+        cluster := CreateIndex(cluster, [ name |-> "idx_v2", docs |-> {} ]);
+    CopyDocuments:
+        cluster := Reindex(cluster, "idx_v1", "idx_v2");
+    AtomicAliasSwap:
+        cluster := UpdateAlias(cluster, {
+            [ alias |-> "idx_r", index |-> "idx_v2" ],
+            [ alias |-> "idx_w", index |-> "idx_v2" ]
+        });
     DeleteSource:
-        existing_indices := existing_indices \ { source_index_name };
+        cluster := DeleteIndex(cluster, "idx_v1");
     Check:
-        assert target_index_name \in existing_indices;
-        assert source_index_name \notin existing_indices;
-        assert read_alias = target_index_name;
-        assert write_alias = target_index_name;
-        assert target_index_docs = documents;
+        assert ~ExistsIndex(cluster, "idx_v1");
+        assert ExistsIndex(cluster, "idx_v2");
+        assert ExistsAlias(cluster, [ alias |-> "idx_r", index |-> "idx_v2" ]);
+        assert ExistsAlias(cluster, [ alias |-> "idx_w", index |-> "idx_v2" ]);
 end process
-
 end algorithm *)
 ```
 
-If
+If we want to check the "zero downtime" property of this system, we can either
+check for the temporal property `StatesAreConsistent` as an invariant or
+manually add a searching user process that checks search results:
 
+```
+process search = "GET /_search"
+begin
+    SearchRequest:
+        assert known_documents = Search(cluster, "idx_r");
+end process
+```
+
+And indeed, with those verifications the model checks without errors. What if we
+add a process that creates a document?
+
+```
+process create = "PUT /idx_w/_create/{id}"
+variable doc = [ id |-> 10 ]
+begin
+    CreateRequest:
+        known_documents := known_documents \union { doc };
+        cluster := CreateDocument(cluster, "idx_w", doc);
+end process
+```
+
+The model checker spits `Error: Invariant StatesAreConsistent is violated.`, as
+expected. More importantly, it gives us the event history that lead this
+violation:
+
+```
+$ tlc zdr1.tla
+Error: Invariant StatesAreConsistent is violated.
+State 1: <Initial predicate>
+State 2: <CreateTargetIndex line 86, col 17 to line 89, col 55 of module zdr1>
+State 3: <CopyDocuments line 91, col 18 to line 94, col 56 of module zdr1>
+State 4: <CreateRequest line 124, col 18 to line 128, col 30 of module zdr1>
+State 5: <AtomicAliasSwap line 96, col 20 to line 102, col 58 of module zdr1>
+```
+
+When a document is created, it might be written to the old index after the
+reindex copies it to the new index but before the write alias is swapped. This
+indeed leads to data loss.
 
 ## Proposal
 
