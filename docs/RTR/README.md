@@ -2,7 +2,7 @@
 
 ## Background
 
-In a blog post from 2013 [Elastic explained how to perform a mapping migration
+In a blog post from 2013, [Elastic explained how to perform a mapping migration
 without downtime][1]. The process has been much facilitated by the [2016 release
 of the Reindex API][2], but the overall strategy reproduced [here][3] and
 [there][4] is basically the same:
@@ -15,10 +15,10 @@ of the Reindex API][2], but the overall strategy reproduced [here][3] and
 6. Remove old index
 
 "Zero Downtime" means you won't be getting `index_not_found_exception` errors,
-but for some applications that's far from enough. [Several][5] [others][6]
-[have][7] [noticed][8] that this procedure does not take into account read and
-write requests that arrive between and during each step. There's possibility of
-losing new documents, corruption of existing documents and resurgence of deleted
+but for some applications that's not enough. [Several][5] [others][6] [have][7]
+[noticed][8] that this procedure does not take into account read and write
+requests that arrive between and during each step. There's possibility of losing
+new documents, corruption of existing documents and resurgence of deleted
 documents, and given large indexes will take a while to complete the reindex
 task, the probability of such indidents are high.
 
@@ -29,10 +29,10 @@ but also inconsistencies between query responses and inferences about existing
 documents after any operations.
 
 This analysis focus on system state snapshots but one should take note that
-there are still other important concerns that might affect the user experience,
-e.g. operational performance of the Elasticsearch cluster during the migration
-as reindex tasks can be resource intensive. Application performance degrataion
-is one way to fail on the goal of complete transparency.
+there are still other details that might affect user experience. For example,
+operational aspects of the Elasticsearch cluster during the migration (as
+reindex tasks can be resource intensive) can compromise complete transparency if
+users notice application performance degrataion.
 
 [1]: https://www.elastic.co/blog/changing-mapping-with-zero-downtime
 [2]: https://www.elastic.co/blog/reindex-is-coming
