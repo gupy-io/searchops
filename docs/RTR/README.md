@@ -54,21 +54,19 @@ as result of prior read and write requests.
 
 ## Nonsolutions
 
+We will specify the system and proposed solutions in PlusCalc/[TLA+][]. If you
+don't want to spin up the TLA Toolbox IDE, you can reproduce the findings with
+Make.
+
+[TLA+]: https://github.com/tlaplus/tlaplus
+
 ### Zero Downtime Reindex
 
 We will start off with a system [specification](/docs/RTR/zdr.tla) for the
 reindex procedure presented [previously](#background).
 
-```tla
+```
 (* --algorithm ZDR
-
-variables
-    documents = {[id |-> 1], [id |-> 2], [id |-> 3]},
-    source_index_name = "source", source_index = documents,
-    write_alias = source_index_name, read_alias = source_index_name,
-    existing_indices = { source_index_name },
-    target_index_name = "target", target_index = {};
-
 
 process ZDR = "Zero Downtime Reindex"
 begin
@@ -78,7 +76,7 @@ begin
     Reindex:
         assert source_index_name \in existing_indices;
         assert target_index_name \in existing_indices;
-        target_index := source_index;
+        target_index_docs := source_index_docs;
     UpdateAliases:
         write_alias := target_index_name;
         read_alias := target_index_name;
@@ -89,7 +87,7 @@ begin
         assert source_index_name \notin existing_indices;
         assert read_alias = target_index_name;
         assert write_alias = target_index_name;
-        assert target_index = documents;
+        assert target_index_docs = documents;
 end process
 
 end algorithm *)
