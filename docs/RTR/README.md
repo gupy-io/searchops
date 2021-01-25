@@ -106,9 +106,12 @@ end process
 end algorithm *)
 ```
 
-If we want to check the "zero downtime" property of this system, we can either
-check for the temporal property `StatesAreConsistent` as an invariant or
-manually add a searching user process that checks search results:
+If we want to check the "zero downtime" property of this system, we can simply
+model check it to not terminate with errors. It indeed passes that check and can
+be said to have zero downtime. If we want to check the "relocation transparency"
+property, we can either check for the temporal property `StatesAreConsistent` as
+an invariant or manually add a searching user process that checks search
+results:
 
 ```
 process search = "GET /_search"
@@ -118,8 +121,8 @@ begin
 end process
 ```
 
-And indeed, with those verifications the model checks without errors. What if we
-add a process that creates a document?
+At first, with those verifications the model checks without errors. But what if
+we add a process that creates a document?
 
 ```
 process create = "PUT /idx_w/_create/{id}"
@@ -145,9 +148,10 @@ State 4: <CreateRequest line 124, col 18 to line 128, col 30 of module zdr1>
 State 5: <AtomicAliasSwap line 96, col 20 to line 102, col 58 of module zdr1>
 ```
 
-When a document is created, it might be written to the old index after the
-reindex copies it to the new index but before the write alias is swapped. This
-indeed leads to data loss.
+When a new document is created, it might be written to the old index after the
+reindex copies existing documents to the new index but before the write alias is
+swapped. This indeed leads to data loss because the new document lives only in
+the old index and the whole index is later deleted.
 
 ## Proposal
 
