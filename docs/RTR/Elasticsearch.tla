@@ -85,20 +85,29 @@ UpdateDocument(cluster, index_or_alias, doc) ==
 
 
 Search(cluster, index_or_alias) ==
-    LET
-        index == IndexFromIndexOrAlias(cluster, index_or_alias)
-    IN
-        index.docs
+    IF ExistsIndex(cluster, index_or_alias) THEN
+        LET
+            index == CHOOSE idx \in cluster.indices : idx.name = index_or_alias
+        IN
+            index.docs
+    ELSE
+        LET
+            aliases == { als \in cluster.aliases : (als.index = index_or_alias \/ als.alias = index_or_alias) }
+            indices == { idx \in cluster.indices : idx.name \in { als.index : als \in aliases } }
+        IN
+            UNION { idx.docs : idx \in indices }
 
 Reindex(cluster, source_name, target_name) ==
     LET
         source_index == CHOOSE idx \in cluster.indices : idx.name = source_name
         target_index == CHOOSE idx \in cluster.indices : idx.name = target_name
+        intersection == { doc.id : doc \in source_index.docs } \intersect { doc.id : doc \in target_index.docs }
+        merged_union == target_index.docs \union { doc \in source_index.docs : doc.id \notin intersection }
     IN
         [
             aliases |-> cluster.aliases,
             indices |-> (cluster.indices \ { target_index })
-                \union {[ name |-> target_name, docs |-> source_index.docs ]}
+                \union {[ name |-> target_name, docs |-> merged_union ]}
         ]
 
 ====

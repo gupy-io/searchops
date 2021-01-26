@@ -95,8 +95,8 @@ begin
 end process
 ```
 
-It indeed passes the check and can be said to have zero downtime. But if we want
-to check the "relocation transparency" property, we can change the process to
+It passes the check and can be said to have zero downtime. But if we want to
+check the "relocation transparency" property, we can change the process to
 create a new document and add an expectation about the state of existing
 documents:
 
@@ -122,23 +122,24 @@ State 1: <Initial predicate>
 State 2: <CreateTargetIndex line 73, col 22 to line 76, col 60 of module zdr1>
 State 3: <CopyDocuments line 78, col 18 to line 81, col 56 of module zdr1>
 State 4: <CreateRequest line 99, col 18 to line 103, col 30 of module zdr1>
-State 5: <AtomicAliasSwap line 83, col 20 to line 89, col 58 of module zdr1>>
+State 5: <AtomicAliasSwap line 83, col 20 to line 89, col 58 of module zdr1>
 ```
 
 When a new document is created, it might be written to the old index after the
 reindex copies existing documents to the new index but before the write alias is
-swapped. This indeed leads to data loss because the new document lives only in
-the old index and the whole index is later deleted.
+swapped. When the read alias is swapped, a read request will see inconsistent
+state. Even worse, this leads to data loss because the new document lives only
+in the old index and the whole index is later deleted.
 
 ### ZDR + Write To New
 
 The immediate fix for the data loss scenario described on the zero downtime
-reindex procedure is to perform writes in the new index. The expected drawback
+reindex procedure is to perform writes in the new index. The predicted drawback
 is that until the read alias is changed to the new index, users will be served
 with stale data, violating relocation transparency. Let's check it:
 
 ```
-process ZDR = "Zero Downtime Reindex"
+process ZDR = "Zero Downtime Reindex + Write To New"
 begin
     CreateTargetIndex:
         cluster := CreateIndex(cluster, [ name |-> "idx_v2", docs |-> {} ]);
@@ -159,8 +160,8 @@ begin
 end process
 ```
 
-When checked with the same write and consistency assertion as before, the model
-also terminates with assertion error, with basically the same chain of events.
+As expected, when checked for relocation transparency the model also fails
+because reading right after writing will return an inconsistent result.
 
 ```
 $ tlc zdr2.tla | grep State
@@ -171,12 +172,9 @@ State 3: <WritesToNewIndex line 83, col 21 to line 89, col 59 of module zdr2>
 State 4: <CreateRequest line 112, col 18 to line 116, col 30 of module zdr2>
 ```
 
-As expected, the new document is written to the new index, but until the read
-alias is swapped later on, readers are getting inconsistent responses. What if
-we just swap the read alias earlier?
-
-It doesn't matter how early, the result is the same. The ealiest possible is
-right after the creation of the new index:
+The new document is written to the new index, but until the read alias is
+swapped later on, readers are getting inconsistent responses. What if we just
+swap the read alias ealier?
 
 ```
 process ZDR = "Zero Downtime Reindex"
@@ -195,7 +193,7 @@ begin
 end process
 ```
 
-The race condition is still there:
+Relocation transparency still fails:
 
 ```
 $ tlc zdr2.tla | grep State
@@ -206,11 +204,38 @@ State 3: <CreateRequest line 99, col 18 to line 103, col 30 of module zdr2>
 State 4: <AtomicAliasSwap line 78, col 20 to line 84, col 58 of module zdr2>
 ```
 
-In this chain of events, the document is written to the new index...
+In this chain of events, the document is written to the old index and is
+temporarily invisible because the read alias is swapped before the reindex is
+complete and the document is copied over. The read alias swap has to happen
+after the reindex, but then the stale data problem comes back. The read alias
+has to be always pointing to the same index as the write alias; but the write
+alias has to point to the new index and the read alias has to point to the old
+one until reindex is finished...
 
-TODO: whoops, a bug. Reindex is ovewriting the second index with nothing.
+### ZDR + Write To New + Read From Both
 
-### ZDR + Write To New And Read From Both
+Another way to fix in the "ZDR" and "ZDR + Write to New" methods is to use a
+read alias that points to both indexes! This is smart but non-trivial because it
+introduces duplicate results on search queries that the application has to deal
+with.
+
+```
+process ZDR = "Zero Downtime Reindex + Write to New + Read From Both"
+begin
+    CreateTargetIndex:
+        cluster := CreateIndex(cluster, [ name |-> "idx_v2", docs |-> {} ]);
+    ReadFromBothWriteToNew:
+        cluster := UpdateAlias(cluster, {
+            [ alias |-> "idx_r", index |-> "idx_v1" ],
+            [ alias |-> "idx_r", index |-> "idx_v2" ],
+            [ alias |-> "idx_w", index |-> "idx_v2" ]
+        });
+    CopyDocuments:
+        cluster := Reindex(cluster, "idx_v1", "idx_v2");
+    DeleteSourceIndex:
+        cluster := DeleteIndex(cluster, "idx_v1");
+end process
+```
 
 ### ZDR + Write To Both And Read From Old Until Reindex Is Done
 

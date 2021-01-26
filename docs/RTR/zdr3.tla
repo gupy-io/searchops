@@ -1,4 +1,4 @@
----- MODULE zdr2 ----
+---- MODULE zdr3 ----
 EXTENDS TLC, Elasticsearch
 
 (* --algorithm ZDR
@@ -17,22 +17,18 @@ define
     StatesAreConsistent == Search(cluster, "idx_r") = known_documents
 end define;
 
-process ZDR = "Zero Downtime Reindex + Write To New"
+process ZDR = "Zero Downtime Reindex + Write to New + Read From Both"
 begin
     CreateTargetIndex:
         cluster := CreateIndex(cluster, [ name |-> "idx_v2", docs |-> {} ]);
-    WritesToNewIndex:
+    ReadFromBothWriteToNew:
         cluster := UpdateAlias(cluster, {
             [ alias |-> "idx_r", index |-> "idx_v1" ],
+            [ alias |-> "idx_r", index |-> "idx_v2" ],
             [ alias |-> "idx_w", index |-> "idx_v2" ]
         });
     CopyDocuments:
         cluster := Reindex(cluster, "idx_v1", "idx_v2");
-    ReadsToNewIndex:
-        cluster := UpdateAlias(cluster, {
-            [ alias |-> "idx_r", index |-> "idx_v2" ],
-            [ alias |-> "idx_w", index |-> "idx_v2" ]
-        });
     DeleteSourceIndex:
         cluster := DeleteIndex(cluster, "idx_v1");
 end process
@@ -49,7 +45,7 @@ end process
 
 end algorithm *)
 
-\* BEGIN TRANSLATION (chksum(pcal) = "64126a2e" /\ chksum(tla) = "ecf18e98")
+\* BEGIN TRANSLATION (chksum(pcal) = "b2f853f1" /\ chksum(tla) = "34ebcdf9")
 VARIABLES known_documents, cluster, pc
 
 (* define statement *)
@@ -59,7 +55,7 @@ VARIABLE doc
 
 vars == << known_documents, cluster, pc, doc >>
 
-ProcSet == {"Zero Downtime Reindex + Write To New"} \cup {"PUT /idx_w/_create/{id}"}
+ProcSet == {"Zero Downtime Reindex + Write to New + Read From Both"} \cup {"PUT /idx_w/_create/{id}"}
 
 Init == (* Global variables *)
         /\ known_documents = {}
@@ -72,42 +68,35 @@ Init == (* Global variables *)
                      ])
         (* Process create *)
         /\ doc = [ id |-> 10 ]
-        /\ pc = [self \in ProcSet |-> CASE self = "Zero Downtime Reindex + Write To New" -> "CreateTargetIndex"
+        /\ pc = [self \in ProcSet |-> CASE self = "Zero Downtime Reindex + Write to New + Read From Both" -> "CreateTargetIndex"
                                         [] self = "PUT /idx_w/_create/{id}" -> "CreateRequest"]
 
-CreateTargetIndex == /\ pc["Zero Downtime Reindex + Write To New"] = "CreateTargetIndex"
+CreateTargetIndex == /\ pc["Zero Downtime Reindex + Write to New + Read From Both"] = "CreateTargetIndex"
                      /\ cluster' = CreateIndex(cluster, [ name |-> "idx_v2", docs |-> {} ])
-                     /\ pc' = [pc EXCEPT !["Zero Downtime Reindex + Write To New"] = "WritesToNewIndex"]
+                     /\ pc' = [pc EXCEPT !["Zero Downtime Reindex + Write to New + Read From Both"] = "ReadFromBothWriteToNew"]
                      /\ UNCHANGED << known_documents, doc >>
 
-WritesToNewIndex == /\ pc["Zero Downtime Reindex + Write To New"] = "WritesToNewIndex"
-                    /\ cluster' =            UpdateAlias(cluster, {
-                                      [ alias |-> "idx_r", index |-> "idx_v1" ],
-                                      [ alias |-> "idx_w", index |-> "idx_v2" ]
-                                  })
-                    /\ pc' = [pc EXCEPT !["Zero Downtime Reindex + Write To New"] = "CopyDocuments"]
-                    /\ UNCHANGED << known_documents, doc >>
+ReadFromBothWriteToNew == /\ pc["Zero Downtime Reindex + Write to New + Read From Both"] = "ReadFromBothWriteToNew"
+                          /\ cluster' =            UpdateAlias(cluster, {
+                                            [ alias |-> "idx_r", index |-> "idx_v1" ],
+                                            [ alias |-> "idx_r", index |-> "idx_v2" ],
+                                            [ alias |-> "idx_w", index |-> "idx_v2" ]
+                                        })
+                          /\ pc' = [pc EXCEPT !["Zero Downtime Reindex + Write to New + Read From Both"] = "CopyDocuments"]
+                          /\ UNCHANGED << known_documents, doc >>
 
-CopyDocuments == /\ pc["Zero Downtime Reindex + Write To New"] = "CopyDocuments"
+CopyDocuments == /\ pc["Zero Downtime Reindex + Write to New + Read From Both"] = "CopyDocuments"
                  /\ cluster' = Reindex(cluster, "idx_v1", "idx_v2")
-                 /\ pc' = [pc EXCEPT !["Zero Downtime Reindex + Write To New"] = "ReadsToNewIndex"]
+                 /\ pc' = [pc EXCEPT !["Zero Downtime Reindex + Write to New + Read From Both"] = "DeleteSourceIndex"]
                  /\ UNCHANGED << known_documents, doc >>
 
-ReadsToNewIndex == /\ pc["Zero Downtime Reindex + Write To New"] = "ReadsToNewIndex"
-                   /\ cluster' =            UpdateAlias(cluster, {
-                                     [ alias |-> "idx_r", index |-> "idx_v2" ],
-                                     [ alias |-> "idx_w", index |-> "idx_v2" ]
-                                 })
-                   /\ pc' = [pc EXCEPT !["Zero Downtime Reindex + Write To New"] = "DeleteSourceIndex"]
-                   /\ UNCHANGED << known_documents, doc >>
-
-DeleteSourceIndex == /\ pc["Zero Downtime Reindex + Write To New"] = "DeleteSourceIndex"
+DeleteSourceIndex == /\ pc["Zero Downtime Reindex + Write to New + Read From Both"] = "DeleteSourceIndex"
                      /\ cluster' = DeleteIndex(cluster, "idx_v1")
-                     /\ pc' = [pc EXCEPT !["Zero Downtime Reindex + Write To New"] = "Done"]
+                     /\ pc' = [pc EXCEPT !["Zero Downtime Reindex + Write to New + Read From Both"] = "Done"]
                      /\ UNCHANGED << known_documents, doc >>
 
-ZDR == CreateTargetIndex \/ WritesToNewIndex \/ CopyDocuments
-          \/ ReadsToNewIndex \/ DeleteSourceIndex
+ZDR == CreateTargetIndex \/ ReadFromBothWriteToNew \/ CopyDocuments
+          \/ DeleteSourceIndex
 
 CreateRequest == /\ pc["PUT /idx_w/_create/{id}"] = "CreateRequest"
                  /\ known_documents' = (known_documents \union { doc })
@@ -117,7 +106,7 @@ CreateRequest == /\ pc["PUT /idx_w/_create/{id}"] = "CreateRequest"
 
 AssertCreated == /\ pc["PUT /idx_w/_create/{id}"] = "AssertCreated"
                  /\ Assert(StatesAreConsistent, 
-                           "Failure of assertion at line 47, column 9.")
+                           "Failure of assertion at line 43, column 9.")
                  /\ pc' = [pc EXCEPT !["PUT /idx_w/_create/{id}"] = "Done"]
                  /\ UNCHANGED << known_documents, cluster, doc >>
 

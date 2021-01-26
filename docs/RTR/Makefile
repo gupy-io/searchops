@@ -7,3 +7,7 @@ zdr1:
 zdr2:
 	pcal zdr2.tla
 	tlc zdr2.tla
+
+zdr3:
+	pcal zdr3.tla
+	tlc zdr3.tla
