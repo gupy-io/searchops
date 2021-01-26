@@ -66,7 +66,6 @@ We will start off with a system [specification](/docs/RTR/zdr.tla) for the
 reindex procedure [presented by Elastic][1].
 
 ```
-(* --algorithm ZDR
 process ZDR = "Zero Downtime Reindex"
 begin
     CreateTargetIndex:
@@ -81,7 +80,6 @@ begin
     DeleteSourceIndex:
         cluster := DeleteIndex(cluster, "idx_v1");
 end process
-end algorithm *)
 ```
 
 If we want to check the "zero downtime" property of this system, we can add
@@ -140,7 +138,77 @@ is that until the read alias is changed to the new index, users will be served
 with stale data, violating relocation transparency. Let's check it:
 
 ```
+process ZDR = "Zero Downtime Reindex"
+begin
+    CreateTargetIndex:
+        cluster := CreateIndex(cluster, [ name |-> "idx_v2", docs |-> {} ]);
+    WritesToNewIndex:
+        cluster := UpdateAlias(cluster, {
+            [ alias |-> "idx_r", index |-> "idx_v1" ],
+            [ alias |-> "idx_w", index |-> "idx_v2" ]
+        });
+    CopyDocuments:
+        cluster := Reindex(cluster, "idx_v1", "idx_v2");
+    ReadsToNewIndex:
+        cluster := UpdateAlias(cluster, {
+            [ alias |-> "idx_r", index |-> "idx_v2" ],
+            [ alias |-> "idx_w", index |-> "idx_v2" ]
+        });
+    DeleteSourceIndex:
+        cluster := DeleteIndex(cluster, "idx_v1");
+end process
 ```
+
+When checked with the same write and consistency assertion as before, the model
+also terminates with assertion error, with basically the same chain of events.
+
+```
+$ tlc zdr2.tla | grep State
+...
+State 1: <Initial predicate>
+State 2: <CreateTargetIndex line 78, col 22 to line 81, col 60 of module zdr2>
+State 3: <WritesToNewIndex line 83, col 21 to line 89, col 59 of module zdr2>
+State 4: <CreateRequest line 112, col 18 to line 116, col 30 of module zdr2>
+```
+
+As expected, the new document is written to the new index, but until the read
+alias is swapped later on, readers are getting inconsistent responses. What if
+we just swap the read alias earlier?
+
+It doesn't matter how early, the result is the same. The ealiest possible is
+right after the creation of the new index:
+
+```
+process ZDR = "Zero Downtime Reindex"
+begin
+    CreateTargetIndex:
+        cluster := CreateIndex(cluster, [ name |-> "idx_v2", docs |-> {} ]);
+    AtomicAliasSwap:
+        cluster := UpdateAlias(cluster, {
+            [ alias |-> "idx_r", index |-> "idx_v2" ],
+            [ alias |-> "idx_w", index |-> "idx_v2" ]
+        });
+    CopyDocuments:
+        cluster := Reindex(cluster, "idx_v1", "idx_v2");
+    DeleteSourceIndex:
+        cluster := DeleteIndex(cluster, "idx_v1");
+end process
+```
+
+The race condition is still there:
+
+```
+$ tlc zdr2.tla | grep State
+...
+State 1: <Initial predicate>
+State 2: <CreateTargetIndex line 73, col 22 to line 76, col 60 of module zdr2>
+State 3: <CreateRequest line 99, col 18 to line 103, col 30 of module zdr2>
+State 4: <AtomicAliasSwap line 78, col 20 to line 84, col 58 of module zdr2>
+```
+
+In this chain of events, the document is written to the new index...
+
+TODO: whoops, a bug. Reindex is ovewriting the second index with nothing.
 
 ### ZDR + Write To New And Read From Both
 
