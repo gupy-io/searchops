@@ -69,7 +69,7 @@ reindex procedure [presented by Elastic][1].
 (* --algorithm ZDR
 process ZDR = "Zero Downtime Reindex"
 begin
-    CreateTarget:
+    CreateTargetIndex:
         cluster := CreateIndex(cluster, [ name |-> "idx_v2", docs |-> {} ]);
     CopyDocuments:
         cluster := Reindex(cluster, "idx_v1", "idx_v2");
@@ -78,35 +78,29 @@ begin
             [ alias |-> "idx_r", index |-> "idx_v2" ],
             [ alias |-> "idx_w", index |-> "idx_v2" ]
         });
-    DeleteSource:
+    DeleteSourceIndex:
         cluster := DeleteIndex(cluster, "idx_v1");
-    Check:
-        assert ~ExistsIndex(cluster, "idx_v1");
-        assert ExistsIndex(cluster, "idx_v2");
-        assert ExistsAlias(cluster, [ alias |-> "idx_r", index |-> "idx_v2" ]);
-        assert ExistsAlias(cluster, [ alias |-> "idx_w", index |-> "idx_v2" ]);
 end process
 end algorithm *)
 ```
 
-If we want to check the "zero downtime" property of this system, we can simply
-model check it to not terminate with errors. It indeed passes that check and can
-be said to have zero downtime. If we want to check the "relocation transparency"
-property, we can either check for the temporal property `StatesAreConsistent` as
-an invariant or manually add a searching user process that checks search
-results:
+If we want to check the "zero downtime" property of this system, we can add
+another process that searches for documents and model check it to not terminate
+with errors.
 
 ```
 process search = "GET /_search"
+variables response = {}
 begin
     SearchRequest:
-        assert known_documents = Search(cluster, "idx_r");
+        response := Search(cluster, "idx_r");
 end process
 ```
 
-With only such read processes the model checks without errors, so there is no
-downtime indeed. But what happens with relocation transparency if we add a
-process that creates a document?
+It indeed passes the check and can be said to have zero downtime. But if we want
+to check the "relocation transparency" property, we can change the process to
+create a new document and add an expectation about the state of existing
+documents:
 
 ```
 process create = "PUT /idx_w/_create/{id}"
@@ -115,21 +109,22 @@ begin
     CreateRequest:
         known_documents := known_documents \union { doc };
         cluster := CreateDocument(cluster, "idx_w", doc);
+    AssertCreated:
+        assert StatesAreConsistent;
 end process
 ```
 
-The model checker spits `Error: Invariant StatesAreConsistent is violated`, as
-expected. More importantly, it gives us the event history that lead to this
-violation:
+The model checker spits an assertion error, as expected. More importantly, it
+gives us the event history that lead to this violation:
 
 ```
 $ tlc zdr1.tla | grep State
-Error: Invariant StatesAreConsistent is violated.
+...
 State 1: <Initial predicate>
-State 2: <CreateTargetIndex line 86, col 17 to line 89, col 55 of module zdr1>
-State 3: <CopyDocuments line 91, col 18 to line 94, col 56 of module zdr1>
-State 4: <CreateRequest line 124, col 18 to line 128, col 30 of module zdr1>
-State 5: <AtomicAliasSwap line 96, col 20 to line 102, col 58 of module zdr1>
+State 2: <CreateTargetIndex line 73, col 22 to line 76, col 60 of module zdr1>
+State 3: <CopyDocuments line 78, col 18 to line 81, col 56 of module zdr1>
+State 4: <CreateRequest line 99, col 18 to line 103, col 30 of module zdr1>
+State 5: <AtomicAliasSwap line 83, col 20 to line 89, col 58 of module zdr1>>
 ```
 
 When a new document is created, it might be written to the old index after the
@@ -140,9 +135,12 @@ the old index and the whole index is later deleted.
 ### ZDR + Write To New
 
 The immediate fix for the data loss scenario described on the zero downtime
-reindex procedure is to perform writes in the new index. The drawback is that
-until the read alias is changed to the new index, users will be served with
-stale data.
+reindex procedure is to perform writes in the new index. The expected drawback
+is that until the read alias is changed to the new index, users will be served
+with stale data, violating relocation transparency. Let's check it:
+
+```
+```
 
 ### ZDR + Write To New And Read From Both
 

@@ -30,11 +30,6 @@ begin
         });
     DeleteSourceIndex:
         cluster := DeleteIndex(cluster, "idx_v1");
-    Check:
-        assert ~ExistsIndex(cluster, "idx_v1");
-        assert ExistsIndex(cluster, "idx_v2");
-        assert ExistsAlias(cluster, [ alias |-> "idx_r", index |-> "idx_v2" ]);
-        assert ExistsAlias(cluster, [ alias |-> "idx_w", index |-> "idx_v2" ]);
 end process
 
 process create = "PUT /idx_w/_create/{id}"
@@ -43,11 +38,13 @@ begin
     CreateRequest:
         known_documents := known_documents \union { doc };
         cluster := CreateDocument(cluster, "idx_w", doc);
+    AssertCreated:
+        assert StatesAreConsistent;
 end process
 
 end algorithm *)
 
-\* BEGIN TRANSLATION (chksum(pcal) = "10993988" /\ chksum(tla) = "356777bd")
+\* BEGIN TRANSLATION (chksum(pcal) = "65f3c89c" /\ chksum(tla) = "4e6108e0")
 VARIABLES known_documents, cluster, pc
 
 (* define statement *)
@@ -93,31 +90,25 @@ AtomicAliasSwap == /\ pc["Zero Downtime Reindex"] = "AtomicAliasSwap"
 
 DeleteSourceIndex == /\ pc["Zero Downtime Reindex"] = "DeleteSourceIndex"
                      /\ cluster' = DeleteIndex(cluster, "idx_v1")
-                     /\ pc' = [pc EXCEPT !["Zero Downtime Reindex"] = "Check"]
+                     /\ pc' = [pc EXCEPT !["Zero Downtime Reindex"] = "Done"]
                      /\ UNCHANGED << known_documents, doc >>
 
-Check == /\ pc["Zero Downtime Reindex"] = "Check"
-         /\ Assert(~ExistsIndex(cluster, "idx_v1"), 
-                   "Failure of assertion at line 34, column 9.")
-         /\ Assert(ExistsIndex(cluster, "idx_v2"), 
-                   "Failure of assertion at line 35, column 9.")
-         /\ Assert(ExistsAlias(cluster, [ alias |-> "idx_r", index |-> "idx_v2" ]), 
-                   "Failure of assertion at line 36, column 9.")
-         /\ Assert(ExistsAlias(cluster, [ alias |-> "idx_w", index |-> "idx_v2" ]), 
-                   "Failure of assertion at line 37, column 9.")
-         /\ pc' = [pc EXCEPT !["Zero Downtime Reindex"] = "Done"]
-         /\ UNCHANGED << known_documents, cluster, doc >>
-
 ZDR == CreateTargetIndex \/ CopyDocuments \/ AtomicAliasSwap
-          \/ DeleteSourceIndex \/ Check
+          \/ DeleteSourceIndex
 
 CreateRequest == /\ pc["PUT /idx_w/_create/{id}"] = "CreateRequest"
                  /\ known_documents' = (known_documents \union { doc })
                  /\ cluster' = CreateDocument(cluster, "idx_w", doc)
-                 /\ pc' = [pc EXCEPT !["PUT /idx_w/_create/{id}"] = "Done"]
+                 /\ pc' = [pc EXCEPT !["PUT /idx_w/_create/{id}"] = "AssertCreated"]
                  /\ doc' = doc
 
-create == CreateRequest
+AssertCreated == /\ pc["PUT /idx_w/_create/{id}"] = "AssertCreated"
+                 /\ Assert(StatesAreConsistent, 
+                           "Failure of assertion at line 42, column 9.")
+                 /\ pc' = [pc EXCEPT !["PUT /idx_w/_create/{id}"] = "Done"]
+                 /\ UNCHANGED << known_documents, cluster, doc >>
+
+create == CreateRequest \/ AssertCreated
 
 (* Allow infinite stuttering to prevent deadlock on termination. *)
 Terminating == /\ \A self \in ProcSet: pc[self] = "Done"
