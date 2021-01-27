@@ -4,7 +4,7 @@ EXTENDS TLC, Elasticsearch
 (* --algorithm ZDR
 
 variables
-    known_documents = {[ id |-> 1, version |-> 1]},
+    known_documents = {[ id |-> 1, version |-> 1 ]},
     cluster = NewCluster([
         aliases |-> {
             [ alias |-> "idx_r", index |-> "idx_v1" ],
@@ -49,15 +49,15 @@ variables
     doc1_v2 = [ id |-> 1, version |-> 2 ]
 begin
     UpdateRequest:
-        known_documents := (known_documents \ { doc1_v1 }) \union { doc1_v2 };
-        cluster := UpdateDocument(cluster, "idx_w", doc1_v2);
+        known_documents := known_documents \union { doc1_v2 };
+        cluster := UpsertDocument(cluster, "idx_w", doc1_v2);
     AssertUpdated:
         assert StatesAreConsistent;
 end process
 
 end algorithm *)
 
-\* BEGIN TRANSLATION (chksum(pcal) = "f6d61366" /\ chksum(tla) = "aac19a56")
+\* BEGIN TRANSLATION (chksum(pcal) = "c723422" /\ chksum(tla) = "45f14f86")
 VARIABLES known_documents, cluster, pc
 
 (* define statement *)
@@ -70,7 +70,7 @@ vars == << known_documents, cluster, pc, doc10, doc1_v1, doc1_v2 >>
 ProcSet == {"Zero Downtime Reindex + Write to New + Read From Both"} \cup {"PUT /idx_w/_create/{id}"} \cup {"POST /idx_w/_update/{id}"}
 
 Init == (* Global variables *)
-        /\ known_documents = {[ id |-> 1, version |-> 1]}
+        /\ known_documents = {[ id |-> 1, version |-> 1 ]}
         /\ cluster =           NewCluster([
                          aliases |-> {
                              [ alias |-> "idx_r", index |-> "idx_v1" ],
@@ -131,8 +131,8 @@ AssertCreated == /\ pc["PUT /idx_w/_create/{id}"] = "AssertCreated"
 create == CreateRequest \/ AssertCreated
 
 UpdateRequest == /\ pc["POST /idx_w/_update/{id}"] = "UpdateRequest"
-                 /\ known_documents' = ((known_documents \ { doc1_v1 }) \union { doc1_v2 })
-                 /\ cluster' = UpdateDocument(cluster, "idx_w", doc1_v2)
+                 /\ known_documents' = (known_documents \union { doc1_v2 })
+                 /\ cluster' = UpsertDocument(cluster, "idx_w", doc1_v2)
                  /\ pc' = [pc EXCEPT !["POST /idx_w/_update/{id}"] = "AssertUpdated"]
                  /\ UNCHANGED << doc10, doc1_v1, doc1_v2 >>
 

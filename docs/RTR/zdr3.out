@@ -1,5 +1,5 @@
 TLC2 Version 2.16 of 31 December 2020 (rev: cdddf55)
-Running breadth-first search Model-Checking with fp 68 and seed -4616854869637639207 with 1 worker on 8 cores with 1740MB heap and 64MB offheap memory [pid: 163489] (Linux 5.4.0-62-generic amd64, Ubuntu 11.0.9.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Running breadth-first search Model-Checking with fp 8 and seed -7717865506305339634 with 1 worker on 8 cores with 1740MB heap and 64MB offheap memory [pid: 170668] (Linux 5.4.0-62-generic amd64, Ubuntu 11.0.9.1 x86_64, MSBDiskFPSet, DiskStateQueue).
 Parsing file /home/villasv/projects/searchops/docs/RTR/zdr3.tla
 Parsing file /tmp/TLC.tla
 Parsing file /home/villasv/projects/searchops/docs/RTR/Elasticsearch.tla
@@ -12,11 +12,11 @@ Semantic processing of module FiniteSets
 Semantic processing of module TLC
 Semantic processing of module Elasticsearch
 Semantic processing of module zdr3
-Starting... (2021-01-27 15:50:26)
+Starting... (2021-01-27 16:58:14)
 Computing initial states...
-Finished computing initial states: 1 distinct state generated at 2021-01-27 15:50:26.
+Finished computing initial states: 1 distinct state generated at 2021-01-27 16:58:15.
 Error: The first argument of Assert evaluated to FALSE; the second argument was:
-"Document does not exist"
+"Failure of assertion at line 55, column 9."
 Error: The behavior up to this point is:
 State 1: <Initial predicate>
 /\ doc10 = [id |-> 10, version |-> 1]
@@ -32,48 +32,26 @@ State 1: <Initial predicate>
   "PUT /idx_w/_create/{id}" :> "CreateRequest" @@
   "POST /idx_w/_update/{id}" :> "UpdateRequest" )
 
-State 2: <CreateTargetIndex line 90, col 22 to line 93, col 80 of module zdr3>
+State 2: <UpdateRequest line 133, col 18 to line 137, col 59 of module zdr3>
 /\ doc10 = [id |-> 10, version |-> 1]
 /\ doc1_v1 = [id |-> 1, version |-> 1]
-/\ known_documents = {[id |-> 1, version |-> 1]}
+/\ known_documents = {[id |-> 1, version |-> 1], [id |-> 1, version |-> 2]}
 /\ doc1_v2 = [id |-> 1, version |-> 2]
 /\ cluster = [ aliases |->
       { [alias |-> "idx_r", index |-> "idx_v1"],
         [alias |-> "idx_w", index |-> "idx_v1"] },
-  indices |->
-      { [name |-> "idx_v1", docs |-> {[id |-> 1, version |-> 1]}],
-        [name |-> "idx_v2", docs |-> {}] } ]
+  indices |-> {[name |-> "idx_v1", docs |-> {[id |-> 1, version |-> 2]}]} ]
 /\ pc = ( "Zero Downtime Reindex + Write to New + Read From Both" :>
-      "ReadFromBothWriteToNew" @@
+      "CreateTargetIndex" @@
   "PUT /idx_w/_create/{id}" :> "CreateRequest" @@
-  "POST /idx_w/_update/{id}" :> "UpdateRequest" )
-
-State 3: <ReadFromBothWriteToNew line 95, col 27 to line 103, col 52 of module zdr3>
-/\ doc10 = [id |-> 10, version |-> 1]
-/\ doc1_v1 = [id |-> 1, version |-> 1]
-/\ known_documents = {[id |-> 1, version |-> 1]}
-/\ doc1_v2 = [id |-> 1, version |-> 2]
-/\ cluster = [ aliases |->
-      { [alias |-> "idx_r", index |-> "idx_v1"],
-        [alias |-> "idx_r", index |-> "idx_v2"],
-        [alias |-> "idx_w", index |-> "idx_v2"] },
-  indices |->
-      { [name |-> "idx_v1", docs |-> {[id |-> 1, version |-> 1]}],
-        [name |-> "idx_v2", docs |-> {}] } ]
-/\ pc = ( "Zero Downtime Reindex + Write to New + Read From Both" :> "CopyDocuments" @@
-  "PUT /idx_w/_create/{id}" :> "CreateRequest" @@
-  "POST /idx_w/_update/{id}" :> "UpdateRequest" )
+  "POST /idx_w/_update/{id}" :> "AssertUpdated" )
 
 Error: The error occurred when TLC was evaluating the nested
 expressions at the following positions:
-0. Line 133, column 18 to line 137, column 59 in zdr3
-1. Line 133, column 21 to line 133, column 68 in zdr3
-2. Line 134, column 21 to line 134, column 91 in zdr3
-3. Line 135, column 21 to line 135, column 72 in zdr3
-4. Line 135, column 32 to line 135, column 72 in zdr3
-5. Line 73, column 5 to line 84, column 13 in Elasticsearch
-6. Line 74, column 9 to line 74, column 48 in Elasticsearch
+0. Line 139, column 18 to line 144, column 43 in zdr3
+1. Line 139, column 21 to line 139, column 68 in zdr3
+2. Line 140, column 21 to line 141, column 72 in zdr3
 
 
-15 states generated, 12 distinct states found, 7 states left on queue.
-Finished in 00s at (2021-01-27 15:50:26)
+12 states generated, 9 distinct states found, 5 states left on queue.
+Finished in 00s at (2021-01-27 16:58:15)

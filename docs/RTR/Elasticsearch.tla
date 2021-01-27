@@ -83,6 +83,11 @@ UpdateDocument(cluster, index_or_alias, doc) ==
                     \union {[ name |-> index.name, docs |-> (index.docs \ { prevs }) \union { doc } ]}
             ]
 
+UpsertDocument(cluster, index_or_alias, doc) ==
+    IF ExistsDocument(cluster, index_or_alias, doc.id) THEN
+        UpdateDocument(cluster, index_or_alias, doc)
+    ELSE
+        CreateDocument(cluster, index_or_alias, doc)
 
 Search(cluster, index_or_alias) ==
     IF ExistsIndex(cluster, index_or_alias) THEN

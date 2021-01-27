@@ -242,15 +242,17 @@ and check" process from before, the model checks successfully! This procedure
 completely solves relocation transparency **if the only allowed operation is
 document creation**. This can be the case for append-only log storage, but
 generally not true for search applications where we can have document updates
-and deletions. Let's add checks for an update:
+and deletions. Let's add a process that checks an update:
 
 ```
 process update = "POST /idx_w/_update/{id}"
-variable doc1 = [ id |-> 1, version |-> 2 ]
+variables
+    doc1_v1 = [ id |-> 1, version |-> 1 ],
+    doc1_v2 = [ id |-> 1, version |-> 2 ]
 begin
     UpdateRequest:
-        known_documents := known_documents \union { doc1 };
-        cluster := UpdateDocument(cluster, "idx_w", doc1);
+        known_documents := (known_documents \ { doc1_v1 }) \union { doc1_v2 };
+        cluster := UpdateDocument(cluster, "idx_w", doc1_v2);
     AssertUpdated:
         assert StatesAreConsistent;
 end process
@@ -259,7 +261,7 @@ end process
 The model check fails with `Document does not exist` after the steps:
 
 ```
-$ tlc zdr2.tla | grep State
+$ tlc zdr3.tla | grep State
 ...
 State 1: <Initial predicate>
 State 2: <CreateTargetIndex line 90, col 22 to line 93, col 80 of module zdr3>
@@ -267,17 +269,96 @@ State 3: <ReadFromBothWriteToNew line 95, col 27 to line 103, col 52 of module z
 ```
 
 The problem happens when we write to the new index but the target document
-hasn't been copied over yet. Even if we change into a scripted upsert, it will
-upsert the new bit of info but the remaining data won't be merged to it. The
-previous document version will either cause the reindex to error and halt or
+hasn't been copied over yet. Even if we change it into a scripted upsert, it
+will upsert the new bit of info but the remaining data won't be merged into it.
+The previous document version will either cause the reindex to error and halt or
 cause data loss (if reindexing with the option "proceed on conflicts"). The only
-safe update scenario is using the index API itself and always send the complete
-document, not just the fields being updated. Naturally, deletes should be
-forbidden (and converted to "soft deletes", also using the index API).
+safe update scenario is using the Index API itself and always send the complete
+document, not just the fields being updated - which is basically not updating,
+but recreating the document. Naturally, deletes should be forbidden (and
+converted to "soft deletes", also using the Index API).
 
-In short, this solutions achieves relocation transparency if and only if the
+In short, this solution aopied over. The read alias swap has to happen
+after the reindex, but then the stale data problem comes back. The read alias
+has to be always pointing to the same index as the write alias; but the write
+alias has to point to the new index and the read alias has to point to the old
+one until reindex is finished...
+
+### ZDR + Write To New + Read From Both
+
+Another way to fix in the "ZDR" and "ZDR + Write to New" methods is to use a
+read alias that points to both indexes! This is smart but non-trivial because it
+introduces duplicate results on search queries that the application has to deal
+with.
+
+```
+process ZDR = "Zero Downtime Reindex + Write to New + Read From Both"
+begin
+    CreateTargetIndex:
+        cluster := CreateIndex(cluster, [ name |-> "idx_v2", docs |-> {} ]);
+    ReadFromBothWriteToNew:
+        cluster := UpdateAlias(cluster, {
+            [ alias |-> "idx_r", index |-> "idx_v1" ],
+            [ alias |-> "idx_r", index |-> "idx_v2" ],
+            [ alias |-> "idx_w", index |-> "idx_v2" ]
+        });
+    CopyDocuments:
+        cluster := Reindex(cluster, "idx_v1", "idx_v2");
+    DeleteSourceIndex:
+        cluster := DeleteIndex(cluster, "idx_v1");
+end process
+```
+
+Assuming the search process will deal with duplicates, with the "create, read
+and check" process from before, the model checks successfully! This procedure
+completely solves relocation transparency **if the only allowed operation is
+document creation**. This can be the case for append-only log storage, but
+generally not true for search applications where we can have document updates
+and deletions. Let's add a process that checks an update:
+
+```
+process update = "POST /idx_w/_update/{id}"
+variables
+    doc1_v1 = [ id |-> 1, version |-> 1 ],
+    doc1_v2 = [ id |-> 1, version |-> 2 ]
+begin
+    UpdateRequest:
+        known_documents := (known_documents \ { doc1_v1 }) \union { doc1_v2 };
+        cluster := UpdateDocument(cluster, "idx_w", doc1_v2);
+    AssertUpdated:
+        assert StatesAreConsistent;
+end process
+```
+
+The model check fails with `Document does not exist` after the steps:
+
+```
+$ tlc zdr3.tla | grep State
+...
+State 1: <Initial predicate>
+State 2: <CreateTargetIndex line 90, col 22 to line 93, col 80 of module zdr3>
+State 3: <ReadFromBothWriteToNew line 95, col 27 to line 103, col 52 of module zdr3>
+```
+
+The problem happens when we write to the new index but the target document
+hasn't been copied over yet. Even if we change it into a scripted upsert to get
+rid of the error, it will upsert the new bit of info but the remaining data
+won't be merged into it. The previous document version will either cause the
+reindex to error and halt or cause data loss (if reindexing with the option
+"proceed on conflicts").
+
+The only safe update scenario is using the Index API itself and always send the
+complete document, not just the fields being updated - which is basically not
+updating, but recreating the document. Naturally, deletes should be forbidden
+(and converted to "soft deletes", also using the Index API).
+
+In short, this solution achieves relocation transparency if and only if the
 application limits itself to only write using Index API with whole-document PUT
-requests.
+requests and take care to [collapse][] results giving preference to the
+documents in the newest index. Beware that implementing an aggregation or
+collapse to sort these duplicates can be a big performance tax.
+
+[collapse]: https://www.elastic.co/guide/en/elasticsearch/reference/current/collapse-search-results.html
 
 ### ZDR + Write To Both
 
