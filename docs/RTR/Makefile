@@ -1,13 +1,7 @@
 # https://github.com/pmer/tla-bin
 
-zdr1:
-	pcal zdr1.tla
-	tlc zdr1.tla
+%.out : %.tla
+	pcal $<
+	-tlc $< > $@
 
-zdr2:
-	pcal zdr2.tla
-	tlc zdr2.tla
-
-zdr3:
-	pcal zdr3.tla
-	tlc zdr3.tla
+all: zdr1.out zdr2.out zdr3.out
