@@ -237,7 +237,49 @@ begin
 end process
 ```
 
-### ZDR + Write To Both And Read From Old Until Reindex Is Done
+Assuming the search process will deal with duplicates, with the "create, read
+and check" process from before, the model checks successfully! This procedure
+completely solves relocation transparency **if the only allowed operation is
+document creation**. This can be the case for append-only log storage, but
+generally not true for search applications where we can have document updates
+and deletions. Let's add checks for an update:
+
+```
+process update = "POST /idx_w/_update/{id}"
+variable doc1 = [ id |-> 1, version |-> 2 ]
+begin
+    UpdateRequest:
+        known_documents := known_documents \union { doc1 };
+        cluster := UpdateDocument(cluster, "idx_w", doc1);
+    AssertUpdated:
+        assert StatesAreConsistent;
+end process
+```
+
+The model check fails with `Document does not exist` after the steps:
+
+```
+$ tlc zdr2.tla | grep State
+...
+State 1: <Initial predicate>
+State 2: <CreateTargetIndex line 90, col 22 to line 93, col 80 of module zdr3>
+State 3: <ReadFromBothWriteToNew line 95, col 27 to line 103, col 52 of module zdr3>
+```
+
+The problem happens when we write to the new index but the target document
+hasn't been copied over yet. Even if we change into a scripted upsert, it will
+upsert the new bit of info but the remaining data won't be merged to it. The
+previous document version will either cause the reindex to error and halt or
+cause data loss (if reindexing with the option "proceed on conflicts"). The only
+safe update scenario is using the index API itself and always send the complete
+document, not just the fields being updated. Naturally, deletes should be
+forbidden (and converted to "soft deletes", also using the index API).
+
+In short, this solutions achieves relocation transparency if and only if the
+application limits itself to only write using Index API with whole-document PUT
+requests.
+
+### ZDR + Write To Both
 
 One common addition to the standard ZDR procedure is to configure the
 application to write to both indexes. This is often hand-waved as a solution,
@@ -300,10 +342,11 @@ already exists too:
 
 ## FAQ
 
-1. Reindexing is not an atomic operation, it takes a while to complete and can
-   fail halfway through. Wouldn't you have to take this into account?
+1. Reindexing is not an atomic operation, it's a sequential operation on the
+   documents. Wouldn't you have to take this into account?
 
-    There's no loss of generality on modeling it as atomic because the failure
-    modes of a multi-step reindex are the same as those expected in "about to
-    start" reindex (non-empty set of documents in old index but not in new
-    index).
+    The failure modes of a multi-step reindex are the same as those expected in
+    "about to start" reindex (non-empty set of documents in old index but not in
+    new index) or "just finished" reindex (non-emtpy set of documents present in
+    both indexes), so there's no loss of generality as long as the migration
+    procedure waits for the reindex to finish before the next step.
