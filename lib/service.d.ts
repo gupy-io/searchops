@@ -43,6 +43,10 @@ export declare class BulkError extends Error {
     errors: unknown[];
     constructor(message: string, errors: unknown[]);
 }
+export declare class DeleteByQueryError extends Error {
+    query: SimpleQuery;
+    constructor(message: string, query: SimpleQuery);
+}
 export interface Provider<D extends Document> {
     search(params: Params): Promise<Result<D>>;
 }
