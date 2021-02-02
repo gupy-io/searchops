@@ -1,17 +1,39 @@
 import { jest, expect, describe, describe as context, it } from "@jest/globals";
 import { createLogger } from "winston";
 import { Client } from "@elastic/elasticsearch";
-import { SearchService, Config, BulkError } from "./service";
+import {SearchService, Config, BulkError, DeleteByQueryError} from "./service";
 
 const logger = createLogger({ silent: true });
 
 describe("SearchService", () => {
+  const esConfig = {
+    alias: "abc",
+    mappings: {},
+  };
+
+  context("deleteByQuery", () => {
+    it('throws when deleteByQuery fails', async () => {
+      const searchService = new SearchService({
+        esClient: ({
+          deleteByQuery: () => { throw new Error(); },
+        } as unknown) as Client,
+        esConfig: (esConfig as unknown) as Config,
+        logger,
+      });
+      const query = { ids: ["1"] };
+      try {
+        await searchService.deleteByQuery(query);
+        throw new Error("failed");
+      } catch (e: unknown) {
+        expect(e).toBeInstanceOf(DeleteByQueryError);
+        if (e instanceof DeleteByQueryError) {
+          expect(e.message).toEqual('Error on deleting documents by query {"ids":["1"]}');
+      }
+    }});
+  });
+
   context("bulk", () => {
     const bulk = jest.fn().mockReturnValue({ body: { errors: false } });
-    const esConfig = {
-      alias: "abc",
-      mappings: {},
-    };
 
     it("delegates to esClient", async () => {
       const searchService = new SearchService({

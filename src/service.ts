@@ -63,6 +63,15 @@ export class BulkError extends Error {
   }
 }
 
+export class DeleteByQueryError extends Error {
+  public query: SimpleQuery;
+
+  public constructor(message: string, query: SimpleQuery) {
+    super(message);
+    this.query = query;
+  }
+}
+
 export interface Provider<D extends Document> {
   search(params: Params): Promise<Result<D>>;
 }
@@ -180,10 +189,12 @@ export class SearchService<D extends Document> implements Provider<D> {
         body: { query: { terms: { id: query.ids } } },
       } as RequestParams.DeleteByQuery<SearchBody>);
     } catch (error) {
+      const message = `Error on deleting documents by query ${JSON.stringify(query)}`;
       this.logger.error(
-        `Error on deleting documents by query ${JSON.stringify(query)}`,
+        message,
         error
       );
+      throw new DeleteByQueryError(message, query);
     }
   }
 
