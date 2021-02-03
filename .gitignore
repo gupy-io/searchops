@@ -10,6 +10,9 @@ node_modules/
 # Coverage reports
 coverage
 
+# Log4Brains output
+.log4brains
+
 ### Node ###
 
 # Logs
