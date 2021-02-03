@@ -21,6 +21,7 @@ jobs:
           node-version: 14
       - run: npm ci
       - run: npm run docs
+      - run: touch .log4brains/out/.nojekyll
       - uses: JamesIves/github-pages-deploy-action@3.7.1
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
