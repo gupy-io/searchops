@@ -13,7 +13,6 @@
     "build:clean": "rm -rf lib tsconfig.dist.tsbuildinfo",
     "test": "jest",
     "test:build": "npm run build --prefix ./test/build",
-    "docs": "log4brains build",
     "format": "prettier --write ./src/**/*.{js,ts}",
     "lint": "eslint src --ext .js,.ts"
   },
