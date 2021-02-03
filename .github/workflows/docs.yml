@@ -1,0 +1,29 @@
+name: Docs
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+
+  adrs:
+    name: ADRs
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2.3.4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 14
+      - run: npm ci
+      - run: log4brains build
+      - uses: JamesIves/github-pages-deploy-action@3.7.1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: gh-pages
+          FOLDER: .log4brains/out
+          TARGET_FOLDER: log4brains
