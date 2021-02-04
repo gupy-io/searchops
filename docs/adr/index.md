@@ -12,19 +12,23 @@ requirement that is architecturally significant. An Architectural Decision
 Record (ADR) is a document that captures a single AD. The collection of ADRs
 created and maintained in a project constitutes its decision history.
 
-The typical workflow of an ADR is the following:
+The status lifecycle of an ADR is the following:
 
 ![ADR workflow](/l4b-static/adr-workflow.png)
 
-After leaving draft status, an ADR is immutable (only its status can change).
-That way, you can become familiar with the whole project history just by reading
-its decision history in chronological order.
+After leaving draft status, an ADR is immutable except for it status changes.
+That way, you can become familiar with the whole project history by reading its
+decisions in chronological order without having to inspect previous versions of
+this documentation.
 
-Maintaining this documentation aims at:
+Maintaining these documents aims at:
 
 - 🤝 Formalizing the decision process of the team
-- 🔭 Avoiding blind acceptance/reversal of a past decisions
-- 🚀 Improving and speeding up the onboarding of a new team member
+- 🔭 Avoiding blind acceptance of future decisions
+- 🔁 Avoiding [blind reversal of past decisions][chesterton]
+- 🚀 Improving the onboarding of new contributors
+
+[chesterton]: https://fs.blog/2020/03/chestertons-fence/
 
 ## More information
 
