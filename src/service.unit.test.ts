@@ -1,7 +1,12 @@
 import { jest, expect, describe, describe as context, it } from "@jest/globals";
 import { createLogger } from "winston";
 import { Client } from "@elastic/elasticsearch";
-import {SearchService, Config, BulkError, DeleteByQueryError} from "./service";
+import {
+  SearchService,
+  Config,
+  BulkError,
+  DeleteByQueryError,
+} from "./service";
 
 const logger = createLogger({ silent: true });
 
@@ -12,10 +17,12 @@ describe("SearchService", () => {
   };
 
   context("deleteByQuery", () => {
-    it('throws when deleteByQuery fails', async () => {
+    it("throws when deleteByQuery fails", async () => {
       const searchService = new SearchService({
         esClient: ({
-          deleteByQuery: () => { throw new Error(); },
+          deleteByQuery: () => {
+            throw new Error();
+          },
         } as unknown) as Client,
         esConfig: (esConfig as unknown) as Config,
         logger,
@@ -27,9 +34,12 @@ describe("SearchService", () => {
       } catch (e: unknown) {
         expect(e).toBeInstanceOf(DeleteByQueryError);
         if (e instanceof DeleteByQueryError) {
-          expect(e.message).toEqual('Error on deleting documents by query {"ids":["1"]}');
+          expect(e.message).toEqual(
+            'Error on deleting documents by query {"ids":["1"]}'
+          );
+        }
       }
-    }});
+    });
   });
 
   context("bulk", () => {
