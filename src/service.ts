@@ -189,11 +189,10 @@ export class SearchService<D extends Document> implements Provider<D> {
         body: { query: { terms: { id: query.ids } } },
       } as RequestParams.DeleteByQuery<SearchBody>);
     } catch (error) {
-      const message = `Error on deleting documents by query ${JSON.stringify(query)}`;
-      this.logger.error(
-        message,
-        error
-      );
+      const message = `Error on deleting documents by query ${JSON.stringify(
+        query
+      )}`;
+      this.logger.error(message, error);
       throw new DeleteByQueryError(message, query);
     }
   }
