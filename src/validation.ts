@@ -1,7 +1,9 @@
 import Ajv, { ValidateFunction } from "ajv";
+import stringify from "fast-json-stable-stringify";
 import { Mapping, ObjectMapping, NestedMapping } from "./es-types";
 
 const ajv = new Ajv({ allErrors: true, coerceTypes: true });
+const cache = new Map<string, ValidateFunction>();
 
 const esTypeMap = new Map([
   ["boolean", ["boolean"]],
@@ -73,5 +75,11 @@ export function translateObjectMapping(
 export function getValidatorForMapping(
   mappings: ObjectMapping
 ): ValidateFunction<unknown> {
-  return ajv.compile(translateObjectMapping(mappings));
+  const key = stringify(mappings);
+  if (!cache.has(key)) {
+    cache.set(key, ajv.compile(translateObjectMapping(mappings)));
+  }
+  const value = cache.get(key);
+  if (value) return value;
+  throw new Error("Cache Error");
 }

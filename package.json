@@ -32,7 +32,8 @@
   "dependencies": {
     "@elastic/elasticsearch": "^7.9.0",
     "ajv": "^7.0.3",
-    "aws-sdk": "^2.829.0"
+    "aws-sdk": "^2.829.0",
+    "fast-json-stable-stringify": "^2.1.0"
   },
   "peerDependencies": {
     "winston": "^3.0.0"
