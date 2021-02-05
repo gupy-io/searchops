@@ -1,6 +1,6 @@
 # Optional document schema validation
 
-- Status: draft
+- Status: accepted
 - Date: 2021-02-03
 - Tags: validation, mappings
 
@@ -115,7 +115,7 @@ Cons:
 
 Pros:
 
-- Less code to maintain (+YAGNI)
+- Less code to maintain
 
 Cons:
 
@@ -124,5 +124,7 @@ Cons:
 ## Links <!-- optional -->
 
 - [GitHub Issue #163: Upgrade to Ajv 7.x introduced critical performance issue][issue]
+- [GitHub Issue #164: ADR 20210203 - Optional document schema validation][track]
 
 [issue]: (https://github.com/gupy-io/searchops/issues/163)
+[track]: (https://github.com/gupy-io/searchops/issues/164)
