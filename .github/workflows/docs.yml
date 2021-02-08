@@ -14,16 +14,14 @@ jobs:
     steps:
       - uses: actions/checkout@v2.3.4
         with:
-          persist-credentials: false
           fetch-depth: 0
       - uses: actions/setup-node@v2.1.4
         with:
           node-version: 14
       - run: npm ci
       - run: npx log4brains build --basePath /${GITHUB_REPOSITORY#*/}/adrlogs
-      - uses: JamesIves/github-pages-deploy-action@3.7.1
+      - uses: JamesIves/github-pages-deploy-action@4.0.0
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH: gh-pages
-          FOLDER: .log4brains/out
-          TARGET_FOLDER: adrlogs
+          branch: gh-pages
+          folder: .log4brains/out
+          target-folder: adrlogs
