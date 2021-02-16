@@ -131,8 +131,6 @@ export class SearchService<D extends Document> implements Provider<D> {
         .filter((item: any) => !!this.getAction(item).error)
         // eslint-disable-next-line
         .map((item: any) => this.getAction(item).error);
-      // This logger is temporary and will be removed soon
-      this.logger.error("Error on bulk request (complete log)", response.body);
       throw new BulkError("Error on bulk request", errors);
     }
   }
