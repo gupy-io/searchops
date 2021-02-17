@@ -1,7 +1,7 @@
 {
   "name": "searchops",
-  "version": "0.0.5",
-  "description": "Some description",
+  "version": "0.0.7",
+  "description": "Base operation files for search service",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "files": [
