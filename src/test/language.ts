@@ -1,4 +1,3 @@
-import { describe, test, beforeAll, afterAll } from "@jest/globals";
 import winston from "winston";
 import { Config, Document, SearchService, SimpleQuery } from "../service";
 import { IndexManager } from "../migration";
@@ -288,9 +287,6 @@ class Scenario {
   public build(): void {
     describe(this.testWorld.context, () => {
       describe(this.testWorld.exercise, () => {
-        // TODO: remove eslint-disable after https://github.com/facebook/jest/issues/10066
-        /* eslint-disable @typescript-eslint/no-floating-promises */
-        /* eslint-disable @typescript-eslint/no-misused-promises */
         beforeAll(() =>
           this.testWorld.contextSetup.reduce(
             (chain, setUp) => chain.then(setUp),
@@ -307,9 +303,6 @@ class Scenario {
             Promise.resolve()
           );
         });
-        // TODO: remove eslint-disable after https://github.com/facebook/jest/issues/10066
-        /* eslint-disable @typescript-eslint/no-floating-promises */
-        /* eslint-disable @typescript-eslint/no-misused-promises */
         afterAll(() =>
           this.testWorld.contextTeardown.reduce(
             (chain, tearDown) => chain.then(tearDown),
@@ -321,7 +314,7 @@ class Scenario {
   }
 }
 
-function testz(description: string, definition: (_: Scenario) => void): void {
+function scenario(description: string, definition: (_: Scenario) => void): void {
   return describe(description, () => {
     const _ = new Scenario();
     definition(_);
@@ -330,4 +323,4 @@ function testz(description: string, definition: (_: Scenario) => void): void {
 }
 
 export { describe as context } from "@jest/globals";
-export { testz as test };
+export { scenario as test };
