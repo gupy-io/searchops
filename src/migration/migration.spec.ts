@@ -16,19 +16,4 @@ context("Index Migrations", () => {
     _.whenTheManager().performsMigration();
     _.thenTheIndex().shouldExist();
   });
-  test("Updating dynamic index settings", (_) => {
-    _.givenTheIndex().wasCreated();
-    _.whenTheManager().performsMigration();
-    _.thenTheIndex().shouldExist();
-  });
-  test("Updating dynamic index mappings", (_) => {
-    _.givenTheIndex().wasCreated();
-    _.whenTheManager().performsMigration();
-    _.thenTheIndex().shouldExist();
-  });
-  test("Updating static index mappings", (_) => {
-    _.givenTheIndex().wasCreated();
-    _.whenTheManager().performsMigration();
-    _.thenTheIndex().shouldExist();
-  });
 });
