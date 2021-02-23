@@ -314,7 +314,10 @@ class Scenario {
   }
 }
 
-function scenario(description: string, definition: (_: Scenario) => void): void {
+function scenario(
+  description: string,
+  definition: (_: Scenario) => void
+): void {
   return describe(description, () => {
     const _ = new Scenario();
     definition(_);
