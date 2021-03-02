@@ -73,8 +73,8 @@ export class SearchEngine<E, D extends Document> implements Provider<D> {
     await this.searchService.bulk(body, refresh);
   }
 
-  public index(entity: E): Promise<void> {
-    return this.searchService.index(this.serialize(entity));
+  public index(entity: E, refresh: "wait_for" | false): Promise<void> {
+    return this.searchService.index(this.serialize(entity), refresh);
   }
 
   public delete(docId: Document["id"], routing?: string): Promise<void> {

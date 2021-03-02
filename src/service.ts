@@ -145,7 +145,7 @@ export class SearchService<D extends Document> implements Provider<D> {
 
   public async index(
     doc: D,
-    refresh: "wait_for" | "false" = "false"
+    refresh: "wait_for" | false = false
   ): Promise<void> {
     try {
       const valid = this.validate(doc);
