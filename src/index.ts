@@ -73,7 +73,7 @@ export class SearchEngine<E, D extends Document> implements Provider<D> {
     await this.searchService.bulk(body, refresh);
   }
 
-  public index(entity: E, refresh: "wait_for" | false): Promise<void> {
+  public index(entity: E, refresh: "wait_for" | false = false): Promise<void> {
     return this.searchService.index(this.serialize(entity), refresh);
   }
 
