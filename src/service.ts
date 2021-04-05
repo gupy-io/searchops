@@ -145,10 +145,11 @@ export class SearchService<D extends Document> implements Provider<D> {
 
   public async index(
     doc: D,
-    refresh: "wait_for" | "false" = "false"
+    refresh: "wait_for" | "false" = "false",
+    shouldPreValidate: boolean = true,
   ): Promise<void> {
     try {
-      const valid = this.validate(doc);
+      const valid = shouldPreValidate ? this.validate(doc) : true;
       if (!valid) {
         throw new ValidationError(
           "Document did not pass mapping pre-validation",
