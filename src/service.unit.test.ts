@@ -7,6 +7,7 @@ import {
   BulkError,
   DeleteByQueryError,
 } from "./service";
+import * as validations from "./validation";
 
 const logger = createLogger({ silent: true });
 
@@ -15,6 +16,38 @@ describe("SearchService", () => {
     alias: "abc",
     mappings: {},
   };
+
+  context("index", () => {
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it("Should pre validate mapping when shouldPreValidate is true", async () => {
+      const spy = jest.spyOn(validations, "getValidatorForMapping");
+      const searchService = new SearchService({
+        esClient: ({} as unknown) as Client,
+        esConfig: (esConfig as unknown) as Config,
+        logger,
+        shouldPreValidate: true,
+      });
+      const document = { id: "1" };
+      await searchService.index(document);
+      expect(spy).toHaveBeenCalled();
+    });
+
+    it("Should not pre validate mapping when shouldPreValidate is false", async () => {
+      const spy = jest.spyOn(validations, "getValidatorForMapping");
+      const searchService = new SearchService({
+        esClient: ({} as unknown) as Client,
+        esConfig: (esConfig as unknown) as Config,
+        logger,
+        shouldPreValidate: false,
+      });
+      const document = { id: "1" };
+      await searchService.index(document);
+      expect(spy).not.toHaveBeenCalled();
+    });
+  });
 
   context("deleteByQuery", () => {
     it("throws when deleteByQuery fails", async () => {

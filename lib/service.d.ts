@@ -53,12 +53,13 @@ export interface Provider<D extends Document> {
 export declare class SearchService<D extends Document> implements Provider<D> {
     private esClient;
     private esConfig;
-    private validate;
+    private validate?;
     private logger;
-    constructor({ esClient, esConfig, logger, }: {
+    constructor({ esClient, esConfig, logger, shouldPreValidate, }: {
         esClient: Client;
         esConfig: Config;
         logger: WinstonLogger;
+        shouldPreValidate?: boolean;
     });
     private getAction;
     bulk(body: Record<string, unknown>[], refresh?: "wait_for" | false): Promise<void>;

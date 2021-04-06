@@ -79,21 +79,25 @@ export interface Provider<D extends Document> {
 export class SearchService<D extends Document> implements Provider<D> {
   private esClient: Client;
   private esConfig: Config;
-  private validate: AJV.ValidateFunction;
+  private validate?: AJV.ValidateFunction;
   private logger: WinstonLogger;
 
   public constructor({
     esClient,
     esConfig,
     logger,
+    shouldPreValidate,
   }: {
     esClient: Client;
     esConfig: Config;
     logger: WinstonLogger;
+    shouldPreValidate?: boolean;
   }) {
     this.esClient = esClient;
     this.esConfig = esConfig;
-    this.validate = getValidatorForMapping(esConfig.mappings);
+    this.validate = shouldPreValidate
+      ? getValidatorForMapping(esConfig.mappings)
+      : undefined;
     this.logger = logger;
   }
 
@@ -148,8 +152,7 @@ export class SearchService<D extends Document> implements Provider<D> {
     refresh: "wait_for" | "false" = "false"
   ): Promise<void> {
     try {
-      const valid = this.validate(doc);
-      if (!valid) {
+      if (this.validate && !this.validate(doc)) {
         throw new ValidationError(
           "Document did not pass mapping pre-validation",
           { doc, mapping: this.esConfig.mappings, errors: this.validate.errors }

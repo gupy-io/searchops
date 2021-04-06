@@ -30,6 +30,7 @@ export class SearchEngine<E, D extends Document> implements Provider<D> {
     mappings,
     serialize,
     logger,
+    shouldPreValidate,
   }: {
     esClient: Client;
     domain: string;
@@ -38,6 +39,7 @@ export class SearchEngine<E, D extends Document> implements Provider<D> {
     mappings?: Mappings;
     serialize: (entity: E) => D;
     logger: WinstonLogger;
+    shouldPreValidate?: boolean;
   }) {
     const actualPrefix = namespace ? `${namespace}_` : "";
     const esConfig = {
@@ -51,7 +53,12 @@ export class SearchEngine<E, D extends Document> implements Provider<D> {
     this.esClient = esClient;
     this.esConfig = esConfig;
     this.serialize = serialize;
-    this.searchService = new SearchService({ esClient, esConfig, logger });
+    this.searchService = new SearchService({
+      esClient,
+      esConfig,
+      logger,
+      shouldPreValidate,
+    });
   }
 
   public getQueryBuilder(): QueryBuilder<D> {
