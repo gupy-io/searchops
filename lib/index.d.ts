@@ -10,7 +10,7 @@ export declare class SearchEngine<E, D extends Document> implements Provider<D> 
     private esConfig;
     private serialize;
     private searchService;
-    constructor({ esClient, domain, namespace, settings, mappings, serialize, logger, }: {
+    constructor({ esClient, domain, namespace, settings, mappings, serialize, logger, shouldPreValidate, }: {
         esClient: Client;
         domain: string;
         namespace?: string;
@@ -18,6 +18,7 @@ export declare class SearchEngine<E, D extends Document> implements Provider<D> 
         mappings?: Mappings;
         serialize: (entity: E) => D;
         logger: WinstonLogger;
+        shouldPreValidate?: boolean;
     });
     getQueryBuilder(): QueryBuilder<D>;
     getIndexManager(triggerUpdate?: boolean): IndexManager;
