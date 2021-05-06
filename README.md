@@ -12,7 +12,5 @@ npm test
 npm run lint
 npm run build
 ```
-- Adicionar arquivos gerados pelo build
-
 
 
