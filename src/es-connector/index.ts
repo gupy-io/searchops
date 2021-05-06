@@ -21,7 +21,7 @@ export const createElasticsearch = ({
   const host = elasticConfig.elasticHost || "localhost";
   const port = elasticConfig.elasticPort || 9200;
   const protocol = elasticConfig.elasticProtocol || "http";
-  
+
   const client = new Client({
     Connection: awsSdk.config.credentials
       ? AwsSignedConnection
