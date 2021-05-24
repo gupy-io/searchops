@@ -68,6 +68,7 @@ export class IndexManager {
     await this.swap(this.esConfig.index, stageIndex);
     await this.deleteIndex();
     await this.createIndex();
+    await this.refreshIndex(stageIndex);
     await this.duplicate(stageIndex, this.esConfig.index);
     await this.swap(stageIndex, this.esConfig.index);
     await this.deleteIndex(stageIndex);
