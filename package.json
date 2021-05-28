@@ -1,6 +1,6 @@
 {
   "name": "searchops",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "Base operation files for search service",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",

@@ -23,7 +23,7 @@ export declare class SearchEngine<E, D extends Document> implements Provider<D> 
     getQueryBuilder(): QueryBuilder<D>;
     getIndexManager(triggerUpdate?: boolean): IndexManager;
     bulk(body: Record<string, unknown>[], refresh: "wait_for" | false): Promise<void>;
-    index(entity: E): Promise<void>;
+    index(entity: E, refresh?: "wait_for"): Promise<void>;
     delete(docId: Document["id"], routing?: string): Promise<void>;
     deleteByQuery(query: SimpleQuery): Promise<void>;
     search(params: Params): Promise<Result<D>>;
