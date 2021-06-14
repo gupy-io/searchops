@@ -256,15 +256,14 @@ export class SearchService<D extends Document> implements Provider<D> {
         aggs: facets,
       };
 
-      const response: ApiResponse<
-        SearchResponse<D>
-      > = await this.esClient.search({
-        index: this.esConfig.alias,
-        type: this.esConfig.dtype,
-        body: searchBody,
-        from: window.from,
-        size: window.size,
-      } as RequestParams.Search<SearchBody>);
+      const response: ApiResponse<SearchResponse<D>> =
+        await this.esClient.search({
+          index: this.esConfig.alias,
+          type: this.esConfig.dtype,
+          body: searchBody,
+          from: window.from,
+          size: window.size,
+        } as RequestParams.Search<SearchBody>);
 
       return {
         summary: { total: response.body.hits.total.value },

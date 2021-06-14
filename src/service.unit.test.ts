@@ -25,8 +25,8 @@ describe("SearchService", () => {
     it("Should pre validate mapping when shouldPreValidate is true", async () => {
       const spy = jest.spyOn(validations, "getValidatorForMapping");
       const searchService = new SearchService({
-        esClient: ({} as unknown) as Client,
-        esConfig: (esConfig as unknown) as Config,
+        esClient: {} as unknown as Client,
+        esConfig: esConfig as unknown as Config,
         logger,
         shouldPreValidate: true,
       });
@@ -38,8 +38,8 @@ describe("SearchService", () => {
     it("Should not pre validate mapping when shouldPreValidate is false", async () => {
       const spy = jest.spyOn(validations, "getValidatorForMapping");
       const searchService = new SearchService({
-        esClient: ({} as unknown) as Client,
-        esConfig: (esConfig as unknown) as Config,
+        esClient: {} as unknown as Client,
+        esConfig: esConfig as unknown as Config,
         logger,
         shouldPreValidate: false,
       });
@@ -52,12 +52,12 @@ describe("SearchService", () => {
   context("deleteByQuery", () => {
     it("throws when deleteByQuery fails", async () => {
       const searchService = new SearchService({
-        esClient: ({
+        esClient: {
           deleteByQuery: () => {
             throw new Error();
           },
-        } as unknown) as Client,
-        esConfig: (esConfig as unknown) as Config,
+        } as unknown as Client,
+        esConfig: esConfig as unknown as Config,
         logger,
       });
       const query = { ids: ["1"] };
@@ -80,8 +80,8 @@ describe("SearchService", () => {
 
     it("delegates to esClient", async () => {
       const searchService = new SearchService({
-        esClient: ({ bulk } as unknown) as Client,
-        esConfig: (esConfig as unknown) as Config,
+        esClient: { bulk } as unknown as Client,
+        esConfig: esConfig as unknown as Config,
         logger,
       });
       const document = [{}];
@@ -96,8 +96,8 @@ describe("SearchService", () => {
 
     it("can ask for ES to wait document to be available", async () => {
       const searchService = new SearchService({
-        esClient: ({ bulk } as unknown) as Client,
-        esConfig: (esConfig as unknown) as Config,
+        esClient: { bulk } as unknown as Client,
+        esConfig: esConfig as unknown as Config,
         logger,
       });
       const document = [{}];
@@ -112,7 +112,7 @@ describe("SearchService", () => {
 
     it("throws if esClient.bulk informs error", async () => {
       const searchService = new SearchService({
-        esClient: ({
+        esClient: {
           bulk: () => ({
             body: {
               errors: true,
@@ -126,8 +126,8 @@ describe("SearchService", () => {
               ],
             },
           }),
-        } as unknown) as Client,
-        esConfig: (esConfig as unknown) as Config,
+        } as unknown as Client,
+        esConfig: esConfig as unknown as Config,
         logger,
       });
       const document = [{}];
