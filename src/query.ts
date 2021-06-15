@@ -15,6 +15,9 @@ export class OneOfFilterGroupBuilder {
   }
 }
 
+const itemsWithValue = (s: string | null): s is string => !!s;
+const transformToString = (s: string) => `${s}`;
+
 export class QueryBuilder<D extends Document> {
   private docsProvider: Provider<D>;
   private searchParams: Params;
@@ -50,7 +53,7 @@ export class QueryBuilder<D extends Document> {
     const filter: Query[] = [
       {
         terms: {
-          [field]: terms.filter((s): s is string => !!s).map((s) => `${s}`),
+          [field]: terms.filter(itemsWithValue).map(transformToString),
         },
       },
     ];
@@ -103,7 +106,7 @@ export class QueryBuilder<D extends Document> {
         group.push({ bool: { must_not: { exists: { field } } } });
       }
 
-      const values = terms.filter((s): s is string => !!s).map((s) => `${s}`);
+      const values = terms.filter(itemsWithValue).map(transformToString);
       if (values.length === 0) {
         return;
       }
@@ -124,7 +127,7 @@ export class QueryBuilder<D extends Document> {
     const grants: Query[] = [
       {
         terms: {
-          [field]: terms.filter((s): s is string => !!s).map((s) => `${s}`),
+          [field]: terms.filter(itemsWithValue).map(transformToString),
         },
       },
     ];
