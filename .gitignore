@@ -4,6 +4,9 @@ node_modules/
 # TypeScript Cache
 *.tsbuildinfo
 
+# Output of 'npm build'
+lib/
+
 # Output of 'npm pack'
 *.tgz
 
