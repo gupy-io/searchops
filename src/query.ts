@@ -1,6 +1,23 @@
 import { Query } from "./es-types";
 import { Document, Provider, Params, Result } from "./service";
 
+export class OneOfFilterGroupBuilder {
+  private group: { field: string; terms: (string | null)[] }[] = [];
+
+  public add(field: string, terms: (string | null)[]): OneOfFilterGroupBuilder {
+    this.group.push({ field, terms });
+
+    return this;
+  }
+
+  public build(): { field: string; terms: (string | null)[] }[] {
+    return this.group;
+  }
+}
+
+const itemsWithValue = (s: string | null): s is string => !!s;
+const transformToString = (s: string) => `${s}`;
+
 export class QueryBuilder<D extends Document> {
   private docsProvider: Provider<D>;
   private searchParams: Params;
@@ -36,7 +53,7 @@ export class QueryBuilder<D extends Document> {
     const filter: Query[] = [
       {
         terms: {
-          [field]: terms.filter((s): s is string => !!s).map((s) => `${s}`),
+          [field]: terms.filter(itemsWithValue).map(transformToString),
         },
       },
     ];
@@ -74,11 +91,43 @@ export class QueryBuilder<D extends Document> {
     return this;
   }
 
+  // Returns an object used to build a clause that filters documents that match
+  // any of the clauses in the group.
+  public getOneOfFilterGroupBuilder(): OneOfFilterGroupBuilder {
+    return new OneOfFilterGroupBuilder();
+  }
+
+  public withOneOfFilter(
+    options: { field: string; terms: (string | null)[] }[]
+  ): QueryBuilder<D> {
+    const group: Query[] = [];
+    options.forEach(({ field, terms }) => {
+      if (terms.includes(null)) {
+        group.push({ bool: { must_not: { exists: { field } } } });
+      }
+
+      const values = terms.filter(itemsWithValue).map(transformToString);
+      if (values.length === 0) {
+        return;
+      }
+
+      const filter = { terms: { [field]: values } };
+      group.push(filter);
+    });
+
+    if (group.length === 0) {
+      return this;
+    }
+
+    this.searchParams.filter.push({ bool: { should: group } });
+    return this;
+  }
+
   public withGrants(field: string, terms: (string | null)[]): QueryBuilder<D> {
     const grants: Query[] = [
       {
         terms: {
-          [field]: terms.filter((s): s is string => !!s).map((s) => `${s}`),
+          [field]: terms.filter(itemsWithValue).map(transformToString),
         },
       },
     ];
