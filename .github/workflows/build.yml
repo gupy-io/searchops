@@ -15,5 +15,3 @@ jobs:
           node-version: 14
       - run: npm ci
       - run: npm run build
-      # TODO: remove after issue #50
-      - run: if [ -n "$(git status --porcelain)" ]; then exit 1; fi
