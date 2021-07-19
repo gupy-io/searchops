@@ -18,6 +18,7 @@ export interface Query {
   match_all?: MatchAllQuery;
   nested?: NestedQuery;
   query_string?: QueryStringQuery;
+  range?: RangeQuery;
   term?: TermQuery;
   terms?: TermsQuery;
   match?: MatchQuery;
@@ -118,6 +119,9 @@ export interface MatchPhrasePrefixQuery {
         slop?: number;
         zero_terms_query?: "none" | "all";
       };
+}
+export interface RangeQuery {
+  [field: string]: { gt?: Value; gte?: Value; lt?: Value; lte?: Value };
 }
 
 // #endregion
