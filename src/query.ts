@@ -1,6 +1,13 @@
 import { Query } from "./es-types";
 import { Document, Provider, Params, Result } from "./service";
 
+type RangeArguments = {
+  gt?: string | number;
+  gte?: string | number;
+  lt?: string | number;
+  lte?: string | number;
+};
+
 export class OneOfFilterGroupBuilder {
   private group: { field: string; terms: (string | null)[] }[] = [];
 
@@ -87,6 +94,13 @@ export class QueryBuilder<D extends Document> {
         path: source,
         query: { terms: { [`${source}.${field}`]: terms } },
       },
+    });
+    return this;
+  }
+
+  public withRange(field: string, values: RangeArguments): QueryBuilder<D> {
+    this.searchParams.filter.push({
+      range: { [field]: values },
     });
     return this;
   }

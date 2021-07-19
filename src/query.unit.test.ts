@@ -107,4 +107,21 @@ describe("QueryBuilder", () => {
       });
     });
   });
+
+  describe("range", () => {
+    it("builds a should clause with date range", async () => {
+      const docsProvider = testProvider();
+      const qb = new QueryBuilder({ docsProvider });
+
+      qb.withRange("age", { gt: 10, lte: 20 });
+      await qb.search();
+
+      const { filter } = docsProvider.search.mock.calls[0][0];
+      expect(filter).toStrictEqual([
+        {
+          range: { age: { gt: 10, lte: 20 } },
+        },
+      ]);
+    });
+  });
 });
