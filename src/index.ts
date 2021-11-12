@@ -84,8 +84,8 @@ export class SearchEngine<E, D extends Document> implements Provider<D> {
     return this.searchService.index(this.serialize(entity));
   }
 
-  public delete(docId: Document["id"], routing?: string): Promise<void> {
-    return this.searchService.delete(docId, routing);
+  public delete(docId: Document["id"], routing?: string, refresh: "wait_for" | false = false): Promise<void> {
+    return this.searchService.delete(docId, routing, refresh);
   }
 
   public deleteByQuery(query: SimpleQuery): Promise<void> {
