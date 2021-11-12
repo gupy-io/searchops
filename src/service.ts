@@ -170,13 +170,18 @@ export class SearchService<D extends Document> implements Provider<D> {
     }
   }
 
-  public async delete(docId: Document["id"], routing?: string): Promise<void> {
+  public async delete(
+    docId: Document["id"],
+    routing?: string,
+    refresh: "wait_for" | boolean = false
+  ): Promise<void> {
     try {
       await this.esClient.delete({
         id: `${docId}`,
         index: this.esConfig.alias,
         type: this.esConfig.dtype,
         routing,
+        refresh,
       } as RequestParams.Delete);
     } catch (error) {
       this.logger.error(`Error on deleting document ${docId}`, error);
