@@ -87,7 +87,7 @@ export class SearchEngine<E, D extends Document> implements Provider<D> {
   public delete(
     docId: Document["id"],
     routing?: string,
-    refresh: "wait_for" | false = false
+    refresh: "wait_for" | boolean = false
   ): Promise<void> {
     return this.searchService.delete(docId, routing, refresh);
   }
