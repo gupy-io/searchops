@@ -5,6 +5,7 @@ services:
     image: opensearchproject/opensearch:1.3.0
     environment:
       - "discovery.type=single-node"
+      - "DISABLE_SECURITY_PLUGIN=true"
       - "ES_JAVA_OPTS=-Xms256m -Xmx256m"
     ports:
       - 9200:9200
