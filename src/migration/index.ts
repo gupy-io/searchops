@@ -1,4 +1,4 @@
-import { Client } from "@elastic/elasticsearch";
+import { Client } from "@opensearch-project/opensearch";
 import {
   Settings,
   GetSettingsResponse,
@@ -77,7 +77,6 @@ export class IndexManager {
   public async createIndex(name: string = this.esConfig.index): Promise<void> {
     await this.esClient.indices.create({
       index: name,
-      include_type_name: false,
       body: {
         settings: this.esConfig.settings,
         mappings: this.esConfig.mappings,
@@ -144,7 +143,6 @@ export class IndexManager {
       },
     } = await this.esClient.indices.getMapping<GetMappingsResponse>({
       index,
-      include_type_name: false,
     });
     return mappings;
   }
@@ -156,7 +154,6 @@ export class IndexManager {
     await this.esClient.indices.putMapping({
       index,
       body: mappings,
-      include_type_name: false,
     });
     if (this.triggerUpdate) {
       await this.esClient.updateByQuery({

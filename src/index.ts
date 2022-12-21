@@ -1,5 +1,5 @@
 import type { WinstonLogger } from "./typings/winston";
-import { Client, RequestParams } from "@elastic/elasticsearch";
+import { Client, RequestParams } from "@opensearch-project/opensearch";
 
 import {
   Config,

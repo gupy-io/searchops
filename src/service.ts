@@ -1,5 +1,9 @@
 import type { WinstonLogger } from "./typings/winston";
-import { Client, RequestParams, ApiResponse } from "@elastic/elasticsearch";
+import {
+  Client,
+  RequestParams,
+  ApiResponse,
+} from "@opensearch-project/opensearch";
 import * as AJV from "ajv";
 import {
   Settings,
