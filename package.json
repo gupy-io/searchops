@@ -39,14 +39,14 @@
     "winston": "^3.0.0"
   },
   "devDependencies": {
-    "@types/faker": "^5.5.6",
+    "@types/faker": "^6.6.9",
     "@types/node": "^14.14.30",
     "@typescript-eslint/eslint-plugin": "^4.27.0",
     "@typescript-eslint/parser": "^4.27.0",
     "eslint": "^7.28.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^3.4.0",
-    "faker": "^5.5.3",
+    "faker": "^6.6.6",
     "jest": "^26.6.3",
     "jest-extended": "^0.11.5",
     "log4brains": "^1.0.0-beta.11",
