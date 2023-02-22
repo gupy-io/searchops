@@ -31,7 +31,6 @@ export function getRandomConfig(): Config {
   return {
     index: getRandomSnakeCase(),
     alias: getRandomSnakeCase(),
-    dtype: "_doc",
     settings: {
       number_of_shards: "1",
       number_of_replicas: "1",

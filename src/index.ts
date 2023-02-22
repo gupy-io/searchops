@@ -45,7 +45,6 @@ export class SearchEngine<E, D extends Document> implements Provider<D> {
     const esConfig = {
       alias: `${actualPrefix}${domain}`,
       index: `${actualPrefix}${domain}_index`,
-      dtype: "_doc",
       settings: settings || {},
       mappings: mappings || {},
     };
