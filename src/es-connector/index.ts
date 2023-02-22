@@ -1,5 +1,5 @@
 import awsSdk from "aws-sdk";
-import { Client } from "@elastic/elasticsearch";
+import { Client } from "@opensearch-project/opensearch";
 import type { WinstonLogger } from "../typings/winston";
 import { AwsSignedConnection, UnsignedConnection } from "./aws";
 

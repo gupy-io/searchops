@@ -1,5 +1,9 @@
 import type { WinstonLogger } from "./typings/winston";
-import { Client, RequestParams, ApiResponse } from "@elastic/elasticsearch";
+import {
+  Client,
+  RequestParams,
+  ApiResponse,
+} from "@opensearch-project/opensearch";
 import * as AJV from "ajv";
 import {
   Settings,
@@ -20,7 +24,6 @@ export interface Document {
 export interface Config {
   alias: string;
   index: string;
-  dtype: string;
   mappings: Mappings;
   settings: Settings;
 }
@@ -179,7 +182,6 @@ export class SearchService<D extends Document> implements Provider<D> {
       await this.esClient.delete({
         id: `${docId}`,
         index: this.esConfig.alias,
-        type: this.esConfig.dtype,
         routing,
         refresh,
       } as RequestParams.Delete);
@@ -264,7 +266,6 @@ export class SearchService<D extends Document> implements Provider<D> {
       const response: ApiResponse<SearchResponse<D>> =
         await this.esClient.search({
           index: this.esConfig.alias,
-          type: this.esConfig.dtype,
           body: searchBody,
           from: window.from,
           size: window.size,
@@ -285,7 +286,6 @@ export class SearchService<D extends Document> implements Provider<D> {
     try {
       const response = await this.esClient.count({
         index: this.esConfig.alias,
-        type: this.esConfig.dtype,
         body,
       } as RequestParams.Count);
       return response.body.count as number;

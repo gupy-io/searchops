@@ -1,4 +1,4 @@
-import { Client } from "@elastic/elasticsearch";
+import { Client } from "@opensearch-project/opensearch";
 import type { Logger } from "winston";
 import { random } from "faker";
 
@@ -14,6 +14,9 @@ export function getTestClient(logger?: Logger): Client {
   const elasticPort = process.env.ELASTIC_PORT ?? "9200";
   const esClient: Client = new Client({
     node: `http://${elasticHost}:${elasticPort}`,
+    ssl: {
+      rejectUnauthorized: false,
+    },
   });
   if (logger) {
     esClient.on("response", (error, result): void => {
@@ -28,7 +31,6 @@ export function getRandomConfig(): Config {
   return {
     index: getRandomSnakeCase(),
     alias: getRandomSnakeCase(),
-    dtype: "_doc",
     settings: {
       number_of_shards: "1",
       number_of_replicas: "1",
