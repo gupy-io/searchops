@@ -1,5 +1,5 @@
 import { Readable } from "stream";
-import { Connection as UnsignedConnection } from "@elastic/elasticsearch";
+import { Connection as UnsignedConnection } from "@opensearch-project/opensearch";
 import * as AWS from "aws-sdk";
 import RequestSigner from "aws-sdk/lib/signers/v4";
 import { ClientRequest, IncomingMessage } from "http";

@@ -1,5 +1,5 @@
 import type { WinstonLogger } from "./typings/winston";
-import { Client, RequestParams } from "@elastic/elasticsearch";
+import { Client, RequestParams } from "@opensearch-project/opensearch";
 
 import {
   Config,
@@ -45,7 +45,6 @@ export class SearchEngine<E, D extends Document> implements Provider<D> {
     const esConfig = {
       alias: `${actualPrefix}${domain}`,
       index: `${actualPrefix}${domain}_index`,
-      dtype: "_doc",
       settings: settings || {},
       mappings: mappings || {},
     };

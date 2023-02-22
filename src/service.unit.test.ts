@@ -1,6 +1,6 @@
 import { jest, expect, describe, describe as context, it } from "@jest/globals";
 import { createLogger } from "winston";
-import { Client } from "@elastic/elasticsearch";
+import { Client } from "@opensearch-project/opensearch";
 import {
   SearchService,
   Config,
