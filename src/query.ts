@@ -166,6 +166,11 @@ export class QueryBuilder<D extends Document> {
     return this;
   }
 
+  public withCustomFilter(query: Query[]): QueryBuilder<D> {
+    this.searchParams.filter.push(query);
+    return this;
+  }
+
   public withSortBy(field: string, direction: "asc" | "desc"): QueryBuilder<D> {
     this.searchParams.rerank.push({ [field]: { order: direction } });
     return this;
